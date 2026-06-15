@@ -52,6 +52,9 @@ const canonicalURL = new URL(canonicalPath, siteUrl).href;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={`${siteUrl}/og-image.jpg`} />
 
+    <!-- Google Consent Management Platform (CMP) Banner Block -->
+    <script async src="https://fundingchoicesmessages.google.com/i/pub-0000000000000000/messages.js" data-ncp="true"></script>
+
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-9R61GZ220P"></script>
     <script>
@@ -71,7 +74,23 @@ const canonicalURL = new URL(canonicalPath, siteUrl).href;
       }
     </script>
   </head>
-  <body class="bg-black text-white min-h-screen selection:bg-gray-800">
-    <slot />
+  <body class="bg-black text-white min-h-screen selection:bg-gray-800 flex flex-col">
+    <div class="flex-grow">
+      <slot />
+    </div>
+
+    <!-- The Spider-Web Global Footer (Crawler Highway) -->
+    <footer class="bg-neutral-950 text-neutral-600 text-[11px] py-3 border-t border-neutral-900 text-center w-full px-4">
+      <div class="flex justify-center gap-4 mb-2">
+        <a href={`/${lang}/privacy-policy`} class="hover:text-neutral-400 transition-colors">Privacy Policy</a>
+        <a href={`/${lang}/terms-of-service`} class="hover:text-neutral-400 transition-colors">Terms of Service</a>
+        <a href={`/${lang}/contact`} class="hover:text-neutral-400 transition-colors">Contact Support</a>
+      </div>
+      <div class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[9px] text-neutral-700 max-w-2xl mx-auto uppercase">
+        {langs.map(l => (
+          <a href={l === 'en' ? '/' : `/${l}/`} class="hover:text-neutral-500 transition-colors">{l === 'zh-TW' ? '繁中' : l === 'zh-CN' ? '简中' : l}</a>
+        ))}
+      </div>
+    </footer>
   </body>
 </html>

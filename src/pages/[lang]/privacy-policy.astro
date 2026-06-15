@@ -1,0 +1,36 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { langs } from '../../locales/translations';
+
+export function getStaticPaths() {
+  return langs.map(lang => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params;
+const title = "Privacy Policy - PTCG Companion";
+---
+
+<Layout title={title} lang={lang}>
+  <div class="min-h-screen bg-black text-neutral-300 py-12 px-6 pb-24">
+    <div class="max-w-3xl mx-auto bg-neutral-900 border border-neutral-800 p-8 rounded-2xl shadow-2xl">
+      <h1 class="text-3xl font-black text-white mb-6">Privacy Policy</h1>
+      
+      <div class="space-y-6 text-sm leading-relaxed">
+        <section>
+          <h2 class="text-xl font-bold text-indigo-400 mb-2">1. Local Storage Utilization</h2>
+          <p>This web application utilizes browser <code>localStorage</code> locally to save match parameters and user historical logs. This ensures continuous operation and state persistence during matches. We do not transmit or store this offline match data on our servers.</p>
+        </section>
+
+        <section>
+          <h2 class="text-xl font-bold text-indigo-400 mb-2">2. Analytics and Telemetry</h2>
+          <p>This application integrates Google Analytics 4 (GA4) to collect anonymous global traffic metrics. We use this telemetry data to improve application performance, identify popular regions, and ensure stable esports-grade availability.</p>
+        </section>
+
+        <section>
+          <h2 class="text-xl font-bold text-indigo-400 mb-2">3. Advertising Compliance</h2>
+          <p>This domain serves programmatic advertisements through Google AdSense and complies with user-privacy choices. We strictly adhere to GDPR, CCPA, and global ad policy requirements via the integrated Google Consent Management Platform (CMP).</p>
+        </section>
+      </div>
+    </div>
+  </div>
+</Layout>
