@@ -188,6 +188,24 @@ const PlayerArea = ({ state, player, historyLen, isRotated, isAnim, lang, update
 export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
   const [p1, setP1] = useState<PlayerState>(initialPlayerState());
   const [p2, setP2] = useState<PlayerState>(initialPlayerState());
+
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const onboarded = localStorage.getItem('ptcg_companion_onboarded');
+      if (!onboarded) {
+        setShowOnboarding(true);
+      }
+    }
+  }, []);
+
+  const closeOnboarding = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ptcg_companion_onboarded', 'true');
+    }
+    setShowOnboarding(false);
+  };
   
   const [historyP1, setHistoryP1] = useState<PlayerState[]>([]);
   const [historyP2, setHistoryP2] = useState<PlayerState[]>([]);
@@ -372,11 +390,17 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
             </div>
           </div>
 
-          {/* Central Clock */}
-          <div className="flex flex-col items-center justify-center flex-shrink-0">
+          {/* Central Clock & Help */}
+          <div className="flex flex-col items-center justify-center flex-shrink-0 relative">
             <span onClick={() => { fireFeedback(); setIsTimerRunning(!isTimerRunning); }} className="text-xl font-mono tracking-widest font-extrabold text-amber-400 cursor-pointer active:scale-95 transition-transform" style={{ textShadow: '0 0 10px rgba(251,191,36,0.3)' }}>
               {formatTime(timeLeft)}
             </span>
+            <button 
+              onClick={() => { fireFeedback(); setShowOnboarding(true); }}
+              className="mt-0.5 text-[8px] font-bold text-neutral-500 hover:text-neutral-300 tracking-wider uppercase transition-colors"
+            >
+              ❓ Help / 幫助
+            </button>
           </div>
 
           {/* Coin Flipper */}
@@ -401,6 +425,65 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
       {/* P1 Area */}
       <PlayerArea state={p1} player="p1" historyLen={historyP1.length} isRotated={false} isAnim={p1Anim} lang={lang} updatePlayer={updatePlayer} undoPlayer={undoPlayer} />
       
+      {/* Smart Onboarding, Localization & Compliance Portal */}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-[100] backdrop-blur-md bg-black/80 flex items-center justify-center p-4 animate-fade-in" style={{ animation: 'fadeIn 0.3s ease-out forwards' }}>
+          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl p-6 flex flex-col text-white max-h-[85vh] overflow-y-auto shadow-2xl relative select-auto">
+            {/* A. TITLE & VISUAL SETUP GUIDE */}
+            <h2 className="text-xl font-black mb-3 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Welcome Master Barista & TCG Duelist</h2>
+            <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50 mb-6">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1">Ergonomic Tip</h3>
+              <p className="text-sm leading-relaxed text-neutral-200">
+                Place the phone horizontally or vertically flat on the table between both face-to-face players. Top layout is automatically inverted 180° for your opponent.
+              </p>
+            </div>
+
+            {/* B. EXPRESS LANGUAGE INTERACTIVE PICKER */}
+            <div className="mb-6">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-3">Language / 語言</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <a href="/en/" className={`px-3 py-2.5 border rounded-lg text-sm text-center font-bold transition-all ${lang === 'en' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}>English</a>
+                <a href="/zh-TW/" className={`px-3 py-2.5 border rounded-lg text-sm text-center font-bold transition-all ${lang === 'zh-TW' || lang === 'zh' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}>繁體中文</a>
+                <a href="/ja/" className={`px-3 py-2.5 border rounded-lg text-sm text-center font-bold transition-all ${lang === 'ja' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}>日本語</a>
+                <a href="/ko/" className={`px-3 py-2.5 border rounded-lg text-sm text-center font-bold transition-all ${lang === 'ko' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}>한국어</a>
+              </div>
+            </div>
+
+            {/* C. COMPLIANCE ACCORDION (PRIVACY POLICY & CONTACT) */}
+            <div className="mb-6 flex flex-col gap-2">
+              <details className="group border border-neutral-800 rounded-lg overflow-hidden">
+                <summary className="w-full px-4 py-3 bg-neutral-800/30 flex justify-between items-center text-sm font-bold cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                  <span>Privacy Policy / 隱私政策</span>
+                  <span className="text-neutral-500 group-open:hidden">+</span>
+                  <span className="text-neutral-500 hidden group-open:block">−</span>
+                </summary>
+                <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
+                  This app utilizes local device localStorage to save match states, runs GA4 analytics metrics anonymously, and serves Google AdSense programmatic advertisements.
+                </div>
+              </details>
+
+              <details className="group border border-neutral-800 rounded-lg overflow-hidden">
+                <summary className="w-full px-4 py-3 bg-neutral-800/30 flex justify-between items-center text-sm font-bold cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                  <span>Contact Us / 聯絡我們</span>
+                  <span className="text-neutral-500 group-open:hidden">+</span>
+                  <span className="text-neutral-500 hidden group-open:block">−</span>
+                </summary>
+                <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
+                  For global user feedback and card-shop feature inquiries, please reach out to our support channel.
+                </div>
+              </details>
+            </div>
+
+            {/* D. THE "LET'S BATTLE" CLOSING CTA */}
+            <button 
+              onClick={closeOnboarding} 
+              className="mt-auto w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black tracking-widest uppercase py-4 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)]"
+            >
+              START MATCH / 進入對戰
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
