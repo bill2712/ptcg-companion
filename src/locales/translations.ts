@@ -2,6 +2,7 @@ export const langs = ['en', 'zh-TW', 'ja', 'fr', 'de', 'es', 'pt', 'ru', 'hi', '
 export type Lang = typeof langs[number];
 
 import { legalDictionary } from './legalTranslations';
+import { onboardDictionary } from './onboardTranslations';
 
 export const t = (lang: string, key: string): string => {
   const dictionary: Record<string, Record<string, string>> = {
@@ -332,7 +333,7 @@ export const t = (lang: string, key: string): string => {
     }
   };
 
-  const fallbacks = { ...dictionary['en'], ...legalDictionary['en'] };
-  const target = { ...(dictionary[lang] || dictionary['en']), ...(legalDictionary[lang] || legalDictionary['en']) };
+  const fallbacks = { ...dictionary['en'], ...legalDictionary['en'], ...onboardDictionary['en'] };
+  const target = { ...(dictionary[lang] || dictionary['en']), ...(legalDictionary[lang] || legalDictionary['en']), ...(onboardDictionary[lang] || onboardDictionary['en']) };
   return target[key] || fallbacks[key] || key;
 };

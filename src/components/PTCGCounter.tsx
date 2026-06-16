@@ -430,18 +430,18 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
         <div className="fixed inset-0 z-[100] backdrop-blur-md bg-black/80 flex items-center justify-center p-4 animate-fade-in" style={{ animation: 'fadeIn 0.3s ease-out forwards' }}>
           <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl p-6 flex flex-col text-white max-h-[85vh] overflow-y-auto shadow-2xl relative select-auto">
             {/* A. TITLE & VISUAL SETUP GUIDE */}
-            <h2 className="text-xl font-black mb-3 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">How to Use / 使用教學</h2>
+            <h2 className="text-xl font-black mb-3 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">{t(lang, 'onboardTitle')}</h2>
             <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50 mb-6">
               <ul className="text-sm leading-relaxed text-neutral-200 list-disc pl-4 space-y-2">
-                <li><strong>HP & Status:</strong> Tap +10, -10, etc., to adjust. Tap Poison/Burn to toggle status.</li>
-                <li><strong>Turn & Timer:</strong> Center console tracks time (30 min) and turn numbers.</li>
-                <li><strong>Orientation:</strong> Place phone flat on the table. Top layout auto-inverts 180° for your opponent.</li>
+                <li><strong>{t(lang, 'onboardHpTitle')}</strong> {t(lang, 'onboardHpDesc')}</li>
+                <li><strong>{t(lang, 'onboardTurnTitle')}</strong> {t(lang, 'onboardTurnDesc')}</li>
+                <li><strong>{t(lang, 'onboardOriTitle')}</strong> {t(lang, 'onboardOriDesc')}</li>
               </ul>
             </div>
 
             {/* B. EXPRESS LANGUAGE INTERACTIVE PICKER */}
             <div className="mb-6">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-3">Language / 語言</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-3">{t(lang, 'onboardLangTitle')}</h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {langs.map((l) => {
                   const displayMap: Record<string, string> = {
@@ -464,23 +464,23 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
             <div className="mb-6 flex flex-col gap-2">
               <details className="group border border-neutral-800 rounded-lg overflow-hidden">
                 <summary className="w-full px-4 py-3 bg-neutral-800/30 flex justify-between items-center text-sm font-bold cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                  <span>Privacy Policy / 隱私政策</span>
+                  <span>{t(lang, 'onboardPrivacy')}</span>
                   <span className="text-neutral-500 group-open:hidden">+</span>
                   <span className="text-neutral-500 hidden group-open:block">−</span>
                 </summary>
                 <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
-                  This app uses local device localStorage to save match states. We use GA4 for anonymous analytics and Google AdSense for ads. Third-party vendors, including Google, use cookies to serve ads based on your prior visits. You may opt out of personalized advertising by visiting Google Ads Settings.
+                  {t(lang, 'onboardPrivacyDesc')}
                 </div>
               </details>
 
               <details className="group border border-neutral-800 rounded-lg overflow-hidden">
                 <summary className="w-full px-4 py-3 bg-neutral-800/30 flex justify-between items-center text-sm font-bold cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                  <span>Contact Us / 聯絡我們</span>
+                  <span>{t(lang, 'onboardContact')}</span>
                   <span className="text-neutral-500 group-open:hidden">+</span>
                   <span className="text-neutral-500 hidden group-open:block">−</span>
                 </summary>
                 <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
-                  For feedback, feature requests, or support, please email us at:<br/>
+                  {t(lang, 'onboardContactDesc1')}<br/>
                   <a href="mailto:beyond01hk@gmail.com" className="text-blue-400 hover:underline">beyond01hk@gmail.com</a>
                 </div>
               </details>
@@ -491,7 +491,7 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
               onClick={closeOnboarding} 
               className="mt-auto w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black tracking-widest uppercase py-4 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)]"
             >
-              START MATCH / 進入對戰
+              {t(lang, 'onboardStartBtn')}
             </button>
           </div>
         </div>
