@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { t } from '../locales/translations';
+import { langs, t } from '../locales/translations';
 
 type ElementType = 'None' | 'Grass' | 'Fire' | 'Water' | 'Lightning' | 'Psychic' | 'Fighting' | 'Darkness' | 'Metal' | 'Dragon' | 'Colorless' | 'Stellar';
 
@@ -430,22 +430,33 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
         <div className="fixed inset-0 z-[100] backdrop-blur-md bg-black/80 flex items-center justify-center p-4 animate-fade-in" style={{ animation: 'fadeIn 0.3s ease-out forwards' }}>
           <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl p-6 flex flex-col text-white max-h-[85vh] overflow-y-auto shadow-2xl relative select-auto">
             {/* A. TITLE & VISUAL SETUP GUIDE */}
-            <h2 className="text-xl font-black mb-3 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Welcome Master Barista & TCG Duelist</h2>
+            <h2 className="text-xl font-black mb-3 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">How to Use / 使用教學</h2>
             <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50 mb-6">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1">Ergonomic Tip</h3>
-              <p className="text-sm leading-relaxed text-neutral-200">
-                Place the phone horizontally or vertically flat on the table between both face-to-face players. Top layout is automatically inverted 180° for your opponent.
-              </p>
+              <ul className="text-sm leading-relaxed text-neutral-200 list-disc pl-4 space-y-2">
+                <li><strong>HP & Status:</strong> Tap +10, -10, etc., to adjust. Tap Poison/Burn to toggle status.</li>
+                <li><strong>Turn & Timer:</strong> Center console tracks time (30 min) and turn numbers.</li>
+                <li><strong>Orientation:</strong> Place phone flat on the table. Top layout auto-inverts 180° for your opponent.</li>
+              </ul>
             </div>
 
             {/* B. EXPRESS LANGUAGE INTERACTIVE PICKER */}
             <div className="mb-6">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-3">Language / 語言</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <a href="/en/" className={`px-3 py-2.5 border rounded-lg text-sm text-center font-bold transition-all ${lang === 'en' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}>English</a>
-                <a href="/zh-TW/" className={`px-3 py-2.5 border rounded-lg text-sm text-center font-bold transition-all ${lang === 'zh-TW' || lang === 'zh' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}>繁體中文</a>
-                <a href="/ja/" className={`px-3 py-2.5 border rounded-lg text-sm text-center font-bold transition-all ${lang === 'ja' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}>日本語</a>
-                <a href="/ko/" className={`px-3 py-2.5 border rounded-lg text-sm text-center font-bold transition-all ${lang === 'ko' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}>한국어</a>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {langs.map((l) => {
+                  const displayMap: Record<string, string> = {
+                    en: 'English', 'zh-TW': '繁中', 'zh-CN': '简中', ja: '日本語', fr: 'FR', de: 'DE', es: 'ES', pt: 'PT', ru: 'RU', hi: 'HI', bn: 'BN', ar: 'AR', ur: 'UR'
+                  };
+                  return (
+                    <a 
+                      key={l}
+                      href={l === 'en' ? '/' : `/${l}/`} 
+                      className={`px-2 py-2 border rounded-lg text-[11px] sm:text-xs text-center font-bold transition-all ${lang === l ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}
+                    >
+                      {displayMap[l] || l}
+                    </a>
+                  )
+                })}
               </div>
             </div>
 
@@ -458,7 +469,7 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
                   <span className="text-neutral-500 hidden group-open:block">−</span>
                 </summary>
                 <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
-                  This app utilizes local device localStorage to save match states, runs GA4 analytics metrics anonymously, and serves Google AdSense programmatic advertisements.
+                  This app uses local device localStorage to save match states. We use GA4 for anonymous analytics and Google AdSense for ads. Third-party vendors, including Google, use cookies to serve ads based on your prior visits. You may opt out of personalized advertising by visiting Google Ads Settings.
                 </div>
               </details>
 
@@ -469,7 +480,8 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
                   <span className="text-neutral-500 hidden group-open:block">−</span>
                 </summary>
                 <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
-                  For global user feedback and card-shop feature inquiries, please reach out to our support channel.
+                  For feedback, feature requests, or support, please email us at:<br/>
+                  <a href="mailto:beyond01hk@gmail.com" className="text-blue-400 hover:underline">beyond01hk@gmail.com</a>
                 </div>
               </details>
             </div>
