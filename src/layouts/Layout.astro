@@ -18,8 +18,8 @@ const {
 
 // Construct Canonical URL mathematically cleanly
 const siteUrl = "https://ptcg-companion.pages.dev";
-const canonicalPath = lang === 'en' ? '' : `/${lang}/`;
-const canonicalURL = new URL(canonicalPath, siteUrl).href;
+const canonicalPath = lang === 'en' ? '/' : `/${lang}/`;
+const canonicalURL = new URL(canonicalPath, siteUrl).href.replace(/(?<!:)\/\/+/g, '/');
 ---
 
 <!doctype html>
@@ -34,10 +34,12 @@ const canonicalURL = new URL(canonicalPath, siteUrl).href;
     <link rel="canonical" href={canonicalURL} />
     
     {/* Surgical Hreflang Architecture */}
-    {langs.map(l => (
-      <link rel="alternate" hreflang={l} href={new URL(l === 'en' ? '' : `/${l}/`, siteUrl).href} />
-    ))}
-    <link rel="alternate" hreflang="x-default" href={siteUrl} />
+    {langs.map(l => {
+      const lPath = l === 'en' ? '/' : `/${l}/`;
+      const lUrl = new URL(lPath, siteUrl).href.replace(/(?<!:)\/\/+/g, '/');
+      return <link rel="alternate" hreflang={l} href={lUrl} />
+    })}
+    <link rel="alternate" hreflang="x-default" href={new URL('/', siteUrl).href.replace(/(?<!:)\/\/+/g, '/')} />
 
     {/* Open Graph / Social Preview Graph Overhaul */}
     <meta property="og:type" content="website" />

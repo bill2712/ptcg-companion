@@ -258,6 +258,15 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
     }
   }, []);
 
+  // Hardware Audio Disposal on Unmount
+  useEffect(() => {
+    return () => {
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
+    };
+  }, []);
+
   useEffect(() => {
     let wakeLock: WakeLockSentinel | null = null;
     const nav = navigator as unknown as NavigatorWithWakeLock;
@@ -328,8 +337,9 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
   }, [fireFeedback]);
 
   const undoPlayer = useCallback((player: 'p1' | 'p2') => {
-    fireFeedback();
     if (player === 'p1') {
+      if (historyP1.length === 0) return; // Prevent null pointer freeze
+      fireFeedback();
       setHistoryP1(prev => {
         if (prev.length > 0) {
           setP1(prev[prev.length - 1]);
@@ -338,6 +348,8 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
         return prev;
       });
     } else {
+      if (historyP2.length === 0) return; // Prevent null pointer freeze
+      fireFeedback();
       setHistoryP2(prev => {
         if (prev.length > 0) {
           setP2(prev[prev.length - 1]);
@@ -346,7 +358,7 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
         return prev;
       });
     }
-  }, [fireFeedback]);
+  }, [fireFeedback, historyP1.length, historyP2.length]);
 
   const flipCoin = () => {
     if (isFlipping) return;
@@ -368,13 +380,13 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
   };
 
   return (
-    <div className="bg-black w-full h-screen max-w-md mx-auto flex flex-col justify-between overflow-hidden font-sans select-none">
+    <div className="bg-black w-full h-[100dvh] max-w-md mx-auto flex flex-col justify-between overflow-hidden font-sans select-none">
       
       {/* P2 Area */}
       <PlayerArea state={p2} player="p2" historyLen={historyP2.length} isRotated={true} isAnim={p2Anim} lang={lang} updatePlayer={updatePlayer} undoPlayer={undoPlayer} />
 
       {/* Central Command Console */}
-      <div className="h-[110px] w-full flex flex-col justify-between items-center py-1 bg-neutral-950/90 backdrop-blur border-y border-neutral-900 shadow-2xl relative z-50">
+      <div className="h-[120px] w-full flex flex-col justify-between items-center py-2 bg-neutral-950/90 backdrop-blur border-y border-neutral-900 shadow-2xl relative z-50">
         
         {/* Match Timer & Turn Info */}
         <div className="flex items-center justify-between w-full px-2 h-[50px] gap-2">
@@ -413,7 +425,7 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
 
         {/* Strict AdSense Container (Solid rigid background) */}
         <div 
-          className="bg-neutral-900 flex items-center justify-center rounded shrink-0 relative"
+          className="bg-neutral-900 flex items-center justify-center rounded shrink-0 relative mt-1 mb-1"
           style={{ minWidth: '320px', minHeight: '50px', width: '320px', height: '50px', overflow: 'hidden' }}
         >
           <span className="text-neutral-500 text-[10px] uppercase font-mono tracking-wider absolute">

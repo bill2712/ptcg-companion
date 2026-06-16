@@ -5,8 +5,7 @@ import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://bill2712.github.io',
-  base: '/ptcg-companion',
+  site: 'https://ptcg-companion.pages.dev',
   vite: {
     plugins: [tailwindcss()],
   },
