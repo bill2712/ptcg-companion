@@ -83,7 +83,7 @@ const canonicalURL = new URL(canonicalPath, siteUrl).href.replace(/(?<!:)\/\/+/g
 
     <!-- The Spider-Web Global Footer (Crawler Highway) -->
     <footer class="bg-neutral-950 text-neutral-600 text-[11px] py-2 border-t border-neutral-900 text-center w-full px-4 shrink-0 z-50">
-      <div class="flex justify-center gap-4 mb-2">
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-2">
         <a href={`/${lang}/privacy-policy`} class="hover:text-neutral-400 transition-colors">{t(lang, 'privacyPolicy')}</a>
         <a href={`/${lang}/terms-of-service`} class="hover:text-neutral-400 transition-colors">{t(lang, 'termsOfService')}</a>
         <a href={`/${lang}/contact`} class="hover:text-neutral-400 transition-colors">{t(lang, 'contactSupport')}</a>
