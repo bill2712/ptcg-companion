@@ -76,7 +76,7 @@ interface PlayerAreaProps {
   isRotated: boolean;
   isAnim: boolean;
   lang: string;
-  updatePlayer: (player: 'p1' | 'p2', updates: Partial<PlayerState>) => void;
+  updatePlayer: (player: 'p1' | 'p2', updates: Partial<PlayerState>, skipFeedback?: boolean) => void;
   undoPlayer: (player: 'p1' | 'p2') => void;
 }
 
@@ -92,11 +92,11 @@ const PlayerArea = ({ state, player, historyLen, isRotated, isAnim, lang, update
 
   // Layered Status Ring overlay logic
   let statusRing = '';
-  if (state.poisoned) statusRing = 'ring-4 ring-green-500/80 animate-pulse shadow-[0_0_25px_rgba(34,197,94,0.6)]';
-  else if (state.burned) statusRing = 'ring-4 ring-orange-500/80 animate-pulse shadow-[0_0_25px_rgba(249,115,22,0.6)]';
-  else if (state.paralyzed) statusRing = 'ring-4 ring-yellow-500/80 animate-pulse shadow-[0_0_25px_rgba(234,179,8,0.6)]';
-  else if (state.asleep) statusRing = 'ring-4 ring-blue-500/80 animate-pulse shadow-[0_0_25px_rgba(59,130,246,0.6)]';
-  else if (state.confused) statusRing = 'ring-4 ring-purple-500/80 animate-pulse shadow-[0_0_25px_rgba(168,85,247,0.6)]';
+  if (state.poisoned) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-green-500 animate-pulse shadow-[0_0_25px_rgba(34,197,94,0.6)]';
+  else if (state.burned) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-orange-500 animate-pulse shadow-[0_0_25px_rgba(249,115,22,0.6)]';
+  else if (state.paralyzed) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-yellow-500 animate-pulse shadow-[0_0_25px_rgba(234,179,8,0.6)]';
+  else if (state.asleep) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-blue-500 animate-pulse shadow-[0_0_25px_rgba(59,130,246,0.6)]';
+  else if (state.confused) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-purple-500 animate-pulse shadow-[0_0_25px_rgba(168,85,247,0.6)]';
 
   return (
     <div className={`flex-1 flex flex-col justify-between p-3 m-2 bg-gradient-to-b from-neutral-900 to-neutral-950 border-2 rounded-2xl relative transition-all duration-300 ${elementThemeMap[state.activeType]} ${statusRing} ${isRotated ? 'rotate-180' : ''}`}>
@@ -134,7 +134,7 @@ const PlayerArea = ({ state, player, historyLen, isRotated, isAnim, lang, update
             <span className="text-5xl font-black font-mono tracking-tighter text-red-500" style={{ textShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
               {state.hp}
             </span>
-            <button onClick={() => updatePlayer(player, { hp: 0 })} className="absolute bottom-2 right-3 text-neutral-500 text-[8px] hover:text-white uppercase active:scale-95 font-bold transition-colors">{t(lang, 'reset')}</button>
+            <button onClick={() => updatePlayer(player, { hp: 0 })} className="absolute bottom-3 right-4 text-neutral-500 text-[8px] hover:text-white uppercase active:scale-95 font-bold transition-colors">{t(lang, 'reset')}</button>
           </div>
 
           <div className="flex flex-col gap-1 w-28">
@@ -168,11 +168,11 @@ const PlayerArea = ({ state, player, historyLen, isRotated, isAnim, lang, update
 
       {/* Status Conditions */}
       <div className="grid grid-cols-5 gap-1 w-full mt-2">
-        <button onClick={() => updatePlayer(player, { poisoned: !state.poisoned })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.poisoned ? 'shadow-[0_0_15px_rgba(34,197,94,0.6)] border-green-400 bg-green-500 text-white' : 'border-neutral-800 bg-neutral-900 text-neutral-400'}`}>{t(lang, 'poison')}</button>
-        <button onClick={() => updatePlayer(player, { burned: !state.burned })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.burned ? 'shadow-[0_0_15px_rgba(249,115,22,0.6)] border-orange-400 bg-orange-500 text-white' : 'border-neutral-800 bg-neutral-900 text-neutral-400'}`}>{t(lang, 'burn')}</button>
-        <button onClick={() => updatePlayer(player, { asleep: !state.asleep })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.asleep ? 'shadow-[0_0_15px_rgba(59,130,246,0.6)] border-blue-400 bg-blue-500 text-white' : 'border-neutral-800 bg-neutral-900 text-neutral-400'}`}>{t(lang, 'asleep')}</button>
-        <button onClick={() => updatePlayer(player, { paralyzed: !state.paralyzed })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.paralyzed ? 'shadow-[0_0_15px_rgba(234,179,8,0.6)] border-yellow-400 bg-yellow-500 text-white' : 'border-neutral-800 bg-neutral-900 text-neutral-400'}`}>{t(lang, 'para')}</button>
-        <button onClick={() => updatePlayer(player, { confused: !state.confused })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.confused ? 'shadow-[0_0_15px_rgba(168,85,247,0.6)] border-purple-400 bg-purple-500 text-white' : 'border-neutral-800 bg-neutral-900 text-neutral-400'}`}>{t(lang, 'confuse')}</button>
+        <button onClick={() => updatePlayer(player, { poisoned: !state.poisoned })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.poisoned ? 'shadow-[0_0_15px_rgba(34,197,94,0.6)] border-green-400 bg-green-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'poison')}</button>
+        <button onClick={() => updatePlayer(player, { burned: !state.burned })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.burned ? 'shadow-[0_0_15px_rgba(249,115,22,0.6)] border-orange-400 bg-orange-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'burn')}</button>
+        <button onClick={() => updatePlayer(player, { asleep: !state.asleep })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.asleep ? 'shadow-[0_0_15px_rgba(59,130,246,0.6)] border-blue-400 bg-blue-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'asleep')}</button>
+        <button onClick={() => updatePlayer(player, { paralyzed: !state.paralyzed })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.paralyzed ? 'shadow-[0_0_15px_rgba(234,179,8,0.6)] border-yellow-400 bg-yellow-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'para')}</button>
+        <button onClick={() => updatePlayer(player, { confused: !state.confused })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.confused ? 'shadow-[0_0_15px_rgba(168,85,247,0.6)] border-purple-400 bg-purple-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'confuse')}</button>
       </div>
 
       {/* Legacy Markers */}
@@ -313,52 +313,40 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
     return `${m}:${s}`;
   };
 
-  const updatePlayer = useCallback((player: 'p1' | 'p2', updates: Partial<PlayerState>) => {
-    fireFeedback();
+  const updatePlayer = useCallback((player: 'p1' | 'p2', updates: Partial<PlayerState>, skipFeedback = false) => {
+    if (!skipFeedback) fireFeedback();
     if (player === 'p1') {
       if (updates.hp !== undefined) {
         setP1Anim(true);
         setTimeout(() => setP1Anim(false), 200);
       }
-      setP1(prev => {
-        setHistoryP1(h => [...h, prev].slice(-20));
-        return { ...prev, ...updates };
-      });
+      setHistoryP1(h => [...h, p1].slice(-20));
+      setP1(prev => ({ ...prev, ...updates }));
     } else {
       if (updates.hp !== undefined) {
         setP2Anim(true);
         setTimeout(() => setP2Anim(false), 200);
       }
-      setP2(prev => {
-        setHistoryP2(h => [...h, prev].slice(-20));
-        return { ...prev, ...updates };
-      });
+      setHistoryP2(h => [...h, p2].slice(-20));
+      setP2(prev => ({ ...prev, ...updates }));
     }
-  }, [fireFeedback]);
+  }, [fireFeedback, p1, p2]);
 
   const undoPlayer = useCallback((player: 'p1' | 'p2') => {
     if (player === 'p1') {
       if (historyP1.length === 0) return; // Prevent null pointer freeze
       fireFeedback();
-      setHistoryP1(prev => {
-        if (prev.length > 0) {
-          setP1(prev[prev.length - 1]);
-          return prev.slice(0, -1);
-        }
-        return prev;
-      });
+      const previousState = historyP1[historyP1.length - 1];
+      setP1(previousState);
+      setHistoryP1(prev => prev.slice(0, -1));
     } else {
       if (historyP2.length === 0) return; // Prevent null pointer freeze
       fireFeedback();
-      setHistoryP2(prev => {
-        if (prev.length > 0) {
-          setP2(prev[prev.length - 1]);
-          return prev.slice(0, -1);
-        }
-        return prev;
-      });
+      const previousState = historyP2[historyP2.length - 1];
+      setP2(previousState);
+      setHistoryP2(prev => prev.slice(0, -1));
     }
-  }, [fireFeedback, historyP1.length, historyP2.length]);
+  }, [fireFeedback, historyP1, historyP2]);
 
   const flipCoin = () => {
     if (isFlipping) return;
@@ -375,12 +363,12 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
   const handleNextTurn = () => {
     fireFeedback();
     setTurnCount(prev => prev + 1);
-    updatePlayer('p1', { abilityUsed: false, retreatUsed: false });
-    updatePlayer('p2', { abilityUsed: false, retreatUsed: false });
+    updatePlayer('p1', { abilityUsed: false, retreatUsed: false }, true);
+    updatePlayer('p2', { abilityUsed: false, retreatUsed: false }, true);
   };
 
   return (
-    <div className="bg-black w-full h-[100dvh] max-w-md mx-auto flex flex-col justify-between overflow-hidden font-sans select-none">
+    <div className="bg-black w-full h-full flex-1 max-w-md mx-auto flex flex-col justify-between overflow-hidden font-sans select-none relative">
       
       {/* P2 Area */}
       <PlayerArea state={p2} player="p2" historyLen={historyP2.length} isRotated={true} isAnim={p2Anim} lang={lang} updatePlayer={updatePlayer} undoPlayer={undoPlayer} />
