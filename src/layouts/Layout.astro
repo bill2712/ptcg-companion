@@ -76,8 +76,8 @@ const canonicalURL = new URL(canonicalPath, siteUrl).href.replace(/(?<!:)\/\/+/g
       }
     </script>
   </head>
-  <body class="bg-black text-white h-[100dvh] overflow-hidden selection:bg-gray-800 flex flex-col">
-    <div class="flex-1 overflow-hidden flex flex-col relative w-full">
+  <body class="h-screen w-full flex flex-col justify-between bg-black text-white overflow-hidden selection:bg-gray-800">
+    <div class="flex-1 w-full flex flex-col min-h-0 overflow-hidden relative">
       <slot />
     </div>
 

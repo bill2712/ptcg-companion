@@ -99,7 +99,7 @@ const PlayerArea = ({ state, player, historyLen, isRotated, isAnim, lang, update
   else if (state.confused) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-purple-500 animate-pulse shadow-[0_0_25px_rgba(168,85,247,0.6)]';
 
   return (
-    <div className={`flex-1 flex flex-col justify-between p-3 m-2 bg-gradient-to-b from-neutral-900 to-neutral-950 border-2 rounded-2xl relative transition-all duration-300 ${elementThemeMap[state.activeType]} ${statusRing} ${isRotated ? 'rotate-180' : ''}`}>
+    <div className={`flex-1 min-h-0 flex flex-col justify-between p-3 m-2 bg-gradient-to-b from-neutral-900 to-neutral-950 border-2 rounded-2xl relative transition-all duration-300 ${elementThemeMap[state.activeType]} ${statusRing} ${isRotated ? 'rotate-180' : ''}`}>
       
       {/* Type Dock */}
       <div className="flex justify-between items-center w-full mb-1">
@@ -176,7 +176,7 @@ const PlayerArea = ({ state, player, historyLen, isRotated, isAnim, lang, update
       </div>
 
       {/* Legacy Markers */}
-      <div className="flex items-center gap-2 w-full mt-2">
+      <div className="flex items-center gap-2 w-full mt-2 mb-1">
         <button onClick={() => updatePlayer(player, { vstarUsed: !state.vstarUsed })} className={`flex-1 h-9 rounded-lg font-black italic tracking-widest text-xs border-2 transition-all ${state.vstarUsed ? 'grayscale contrast-50 opacity-30 blur-[0.5px] border-neutral-700 bg-neutral-800 text-neutral-500' : 'bg-gradient-to-br from-yellow-200 to-yellow-600 text-neutral-950 border-yellow-300 shadow-[0_0_10px_rgba(253,224,71,0.5)]'}`}>VSTAR</button>
         <button onClick={() => updatePlayer(player, { gxUsed: !state.gxUsed })} className={`flex-1 h-9 rounded-lg font-black italic tracking-widest text-xs border-2 transition-all ${state.gxUsed ? 'grayscale contrast-50 opacity-30 blur-[0.5px] border-neutral-700 bg-neutral-800 text-neutral-500' : 'bg-gradient-to-br from-cyan-400 to-blue-600 text-white border-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.5)]'}`}>GX</button>
         <button onClick={() => updatePlayer(player, { aceSpecUsed: !state.aceSpecUsed })} className={`flex-1 h-9 rounded-lg font-black italic tracking-widest text-xs border-2 transition-all ${state.aceSpecUsed ? 'grayscale contrast-50 opacity-30 blur-[0.5px] border-neutral-700 bg-neutral-800 text-neutral-500' : 'bg-gradient-to-br from-pink-400 to-fuchsia-600 text-white border-pink-300 shadow-[0_0_10px_rgba(236,72,153,0.5)]'}`}>ACE SPEC</button>
@@ -368,7 +368,7 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
   };
 
   return (
-    <div className="bg-black w-full h-full flex-1 max-w-md mx-auto flex flex-col justify-between overflow-hidden font-sans select-none relative">
+    <div className="bg-black flex-1 w-full flex flex-col min-h-0 overflow-hidden max-w-md mx-auto justify-between font-sans select-none relative">
       
       {/* P2 Area */}
       <PlayerArea state={p2} player="p2" historyLen={historyP2.length} isRotated={true} isAnim={p2Anim} lang={lang} updatePlayer={updatePlayer} undoPlayer={undoPlayer} />
