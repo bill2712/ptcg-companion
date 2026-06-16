@@ -1,5 +1,7 @@
-export const langs = ['en', 'fr', 'ja', 'de', 'es', 'pt', 'ru', 'hi', 'bn', 'ar', 'ur', 'zh-TW', 'zh-CN'] as const;
+export const langs = ['en', 'zh-TW', 'ja', 'fr', 'de', 'es', 'pt', 'ru', 'hi', 'bn', 'ar', 'ur', 'zh-CN'] as const;
 export type Lang = typeof langs[number];
+
+import { legalDictionary } from './legalTranslations';
 
 export const t = (lang: string, key: string): string => {
   const dictionary: Record<string, Record<string, string>> = {
@@ -330,7 +332,7 @@ export const t = (lang: string, key: string): string => {
     }
   };
 
-  const fallbacks = dictionary['en'];
-  const target = dictionary[lang] || fallbacks;
+  const fallbacks = { ...dictionary['en'], ...legalDictionary['en'] };
+  const target = { ...(dictionary[lang] || dictionary['en']), ...(legalDictionary[lang] || legalDictionary['en']) };
   return target[key] || fallbacks[key] || key;
 };

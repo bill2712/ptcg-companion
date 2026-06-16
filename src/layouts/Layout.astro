@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { langs } from '../locales/translations';
+import { langs, t } from '../locales/translations';
 
 interface Props {
   title?: string;
@@ -84,9 +84,9 @@ const canonicalURL = new URL(canonicalPath, siteUrl).href.replace(/(?<!:)\/\/+/g
     <!-- The Spider-Web Global Footer (Crawler Highway) -->
     <footer class="bg-neutral-950 text-neutral-600 text-[11px] py-2 border-t border-neutral-900 text-center w-full px-4 shrink-0 z-50">
       <div class="flex justify-center gap-4 mb-2">
-        <a href={`/${lang}/privacy-policy`} class="hover:text-neutral-400 transition-colors">Privacy Policy</a>
-        <a href={`/${lang}/terms-of-service`} class="hover:text-neutral-400 transition-colors">Terms of Service</a>
-        <a href={`/${lang}/contact`} class="hover:text-neutral-400 transition-colors">Contact Support</a>
+        <a href={`/${lang}/privacy-policy`} class="hover:text-neutral-400 transition-colors">{t(lang, 'privacyPolicy')}</a>
+        <a href={`/${lang}/terms-of-service`} class="hover:text-neutral-400 transition-colors">{t(lang, 'termsOfService')}</a>
+        <a href={`/${lang}/contact`} class="hover:text-neutral-400 transition-colors">{t(lang, 'contactSupport')}</a>
       </div>
       <div class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[9px] text-neutral-700 max-w-2xl mx-auto uppercase">
         {langs.map(l => (
