@@ -6,6 +6,8 @@ import SupportCard from '../../../components/SupportCard.astro';
 import { localePath, t } from '../../../locales/translations';
 import { pageContent } from '../../../locales/pageContent';
 import { siteConfig } from '../../../site.config';
+import { absUrl, breadcrumbLd } from '../../../utils/seo';
+import { toolsContent, toolSlugs } from '../../../locales/toolsContent';
 import { guideLang, guideSlug, guideMeta, readingMinutes } from '../../../utils/guides';
 
 export async function getStaticPaths() {
@@ -27,21 +29,31 @@ const c = pageContent[lang];
 const m = guideMeta(slug);
 const { Content } = await render(entry);
 const url = new URL(localePath(lang, `guides/${slug}/`), siteConfig.siteUrl).href;
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: entry.data.title,
-  description: entry.data.description,
-  dateModified: entry.data.updated.toISOString(),
-  inLanguage: lang,
-  mainEntityOfPage: url,
-  author: { '@type': 'Organization', name: siteConfig.name },
-  publisher: { '@type': 'Organization', name: siteConfig.name },
-};
+const jsonLd = [
+  {
+    '@type': 'Article',
+    headline: entry.data.title,
+    description: entry.data.description,
+    datePublished: entry.data.updated.toISOString(),
+    dateModified: entry.data.updated.toISOString(),
+    inLanguage: lang,
+    mainEntityOfPage: url,
+    image: absUrl('/og-image.png'),
+    author: { '@type': 'Organization', name: siteConfig.name, url: absUrl('/') },
+    publisher: { '@type': 'Organization', name: siteConfig.name, logo: { '@type': 'ImageObject', url: absUrl('/icon-512.png') } },
+  },
+  breadcrumbLd([
+    [siteConfig.name, localePath(lang)],
+    [c.guidesTitle, localePath(lang, 'guides/')],
+    [entry.data.title, localePath(lang, `guides/${slug}/`)],
+  ]),
+];
+const tools = toolsContent[lang];
+const relatedTools = toolSlugs.filter((s) => tools.tools[s].guides.includes(slug));
 const dateStr = entry.data.updated.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric' });
 ---
 
-<Layout title={`${entry.data.title} - PTCG Companion`} description={entry.data.description} lang={lang} suffix={`guides/${slug}/`} alternates={translations} jsonLd={jsonLd}>
+<Layout title={`${entry.data.title} - PTCG Companion`} description={entry.data.description} lang={lang} suffix={`guides/${slug}/`} alternates={translations} jsonLd={jsonLd} ogType="article">
   <main class="max-w-3xl mx-auto px-4 pt-10 sm:pt-14">
     <nav class="text-sm mb-8" aria-label="Breadcrumb">
       <a href={localePath(lang, 'guides/')} class="inline-flex items-center gap-1.5 text-muted hover:text-fg transition-colors">
@@ -68,6 +80,25 @@ const dateStr = entry.data.updated.toLocaleDateString(lang, { year: 'numeric', m
     </div>
 
     <AdSlot lang={lang} />
+
+    {relatedTools.length > 0 && (
+      <section class="mt-12">
+        <h2 class="text-xl font-semibold tracking-tight text-fg mb-4">{tools.toolsTitle}</h2>
+        <ul class="grid sm:grid-cols-2 gap-3">
+          {relatedTools.map((s) => (
+            <li>
+              <a href={localePath(lang, `tools/${s}/`)} class="flex items-center gap-3 p-4 rounded-2xl bg-accent-soft border border-accent/20 hover:border-accent/40 transition-colors h-full">
+                <span class="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-xl shrink-0" aria-hidden="true">{tools.tools[s].icon}</span>
+                <span>
+                  <span class="block text-sm font-semibold text-fg leading-snug">{tools.tools[s].title}</span>
+                  <span class="block text-xs text-muted mt-0.5">{tools.tools[s].card}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     <section class="mt-12">
       <h2 class="text-xl font-semibold tracking-tight text-fg mb-4">{c.moreGuides}</h2>

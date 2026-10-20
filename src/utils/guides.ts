@@ -17,6 +17,8 @@ const meta: Record<string, { icon: string; tint: string }> = {
   'prize-cards-and-winning': { icon: '🏆', tint: 'from-amber-500/20 to-yellow-500/5' },
   'damage-calculation': { icon: '💥', tint: 'from-rose-500/20 to-red-500/5' },
   'match-timer-and-tournament-play': { icon: '⏱️', tint: 'from-fuchsia-500/20 to-pink-500/5' },
+  'deck-building-probability': { icon: '🎲', tint: 'from-sky-500/20 to-cyan-500/5' },
+  'pokemon-tcg-glossary': { icon: '📚', tint: 'from-orange-500/20 to-amber-500/5' },
 };
 export const guideMeta = (slug: string) => meta[slug] ?? { icon: '📖', tint: 'from-zinc-500/20 to-zinc-500/5' };
 

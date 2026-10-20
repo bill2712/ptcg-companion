@@ -33,5 +33,12 @@ Everything monetisation-related lives in one file:
 - Guides: `src/content/guides/<lang>/<slug>.md` (English and Traditional Chinese). Same file name in both folders = translation.
 - Counter UI strings: `src/locales/translations.ts`, `siteTranslations.ts`, `onboardTranslations.ts`, `legalTranslations.ts` (missing keys fall back to English).
 - About / Support copy: `src/locales/pageContent.ts`.
+- Tools (`/<lang>/tools/...`: coin flip, probability calculator, damage calculator): copy in `src/locales/toolsContent.ts`, components in `src/components/tools/`.
+
+## SEO notes
+
+- `siteUrl` must be the address the site is really served from: canonical links, hreflang, the sitemap and robots.txt are built from it.
+- The sitemap lists hreflang alternates and `<lastmod>` for guides (see `astro.config.mjs`).
+- Cloudflare preview builds (any branch other than `main`) get a `noindex` tag and an empty sitemap, so previews never compete with the live site.
 
 PTCG Companion is a fan-made tool and is not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company.

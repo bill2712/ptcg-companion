@@ -1,0 +1,68 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import AdSlot from '../../../components/AdSlot.astro';
+import SupportCard from '../../../components/SupportCard.astro';
+import { contentLangs, localePath, t, type ContentLang } from '../../../locales/translations';
+import { toolsContent, toolSlugs } from '../../../locales/toolsContent';
+import { absUrl, breadcrumbLd } from '../../../utils/seo';
+
+export function getStaticPaths() {
+  return contentLangs.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as ContentLang;
+const c = toolsContent[lang];
+const jsonLd = [
+  {
+    '@type': 'ItemList',
+    name: c.toolsTitle,
+    itemListElement: toolSlugs.map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.tools[s].title,
+      url: absUrl(localePath(lang, `tools/${s}/`)),
+    })),
+  },
+  breadcrumbLd([
+    [c.home, localePath(lang)],
+    [c.toolsTitle, localePath(lang, 'tools/')],
+  ]),
+];
+---
+
+<Layout title={`${c.toolsSeoTitle} | PTCG Companion`} description={c.toolsIntro} lang={lang} suffix="tools/" alternates={contentLangs} jsonLd={jsonLd}>
+  <main class="max-w-5xl mx-auto px-4">
+    <section class="pt-14 pb-10 sm:pt-20 sm:pb-14 text-center">
+      <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-soft text-accent text-xs font-semibold mb-5">{c.toolsEyebrow}</p>
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-fg mb-4">{c.toolsTitle}</h1>
+      <p class="text-muted text-lg max-w-2xl mx-auto leading-relaxed">{c.toolsIntro}</p>
+    </section>
+
+    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <li>
+        <a href={localePath(lang)} class="group relative flex flex-col h-full p-6 rounded-3xl bg-surface border border-line hover:border-line-strong hover:-translate-y-0.5 transition-all overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-indigo-500/5 opacity-60 pointer-events-none" aria-hidden="true"></div>
+          <span class="relative w-12 h-12 rounded-2xl bg-surface-2 flex items-center justify-center text-2xl mb-5" aria-hidden="true">📱</span>
+          <h2 class="relative text-lg font-semibold tracking-tight text-fg mb-2 leading-snug">{t(lang, 'navCounter')}</h2>
+          <p class="relative text-sm text-muted leading-relaxed flex-1">{t(lang, 'metaDesc')}</p>
+          <span class="relative mt-5 text-sm font-medium text-accent group-hover:translate-x-0.5 transition-transform">{t(lang, 'openCounter')} →</span>
+        </a>
+      </li>
+      {toolSlugs.map((s) => {
+        const tc = c.tools[s];
+        return (
+          <li>
+            <a href={localePath(lang, `tools/${s}/`)} class="group relative flex flex-col h-full p-6 rounded-3xl bg-surface border border-line hover:border-line-strong hover:-translate-y-0.5 transition-all overflow-hidden">
+              <div class={`absolute inset-0 bg-gradient-to-br ${tc.tint} opacity-60 pointer-events-none`} aria-hidden="true"></div>
+              <span class="relative w-12 h-12 rounded-2xl bg-surface-2 flex items-center justify-center text-2xl mb-5" aria-hidden="true">{tc.icon}</span>
+              <h2 class="relative text-lg font-semibold tracking-tight text-fg mb-2 leading-snug">{tc.title}</h2>
+              <p class="relative text-sm text-muted leading-relaxed flex-1">{tc.card}</p>
+              <span class="relative mt-5 text-sm font-medium text-accent group-hover:translate-x-0.5 transition-transform">{c.openTool} →</span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+    <AdSlot lang={lang} />
+    <SupportCard lang={lang} />
+  </main>
+</Layout>

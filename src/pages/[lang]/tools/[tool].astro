@@ -1,0 +1,142 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import AdSlot from '../../../components/AdSlot.astro';
+import SupportCard from '../../../components/SupportCard.astro';
+import CoinFlip from '../../../components/tools/CoinFlip';
+import ProbabilityCalc from '../../../components/tools/ProbabilityCalc';
+import DamageCalc from '../../../components/tools/DamageCalc';
+import { contentLangs, localePath, t, type ContentLang } from '../../../locales/translations';
+import { toolsContent, toolSlugs, type ToolSlug } from '../../../locales/toolsContent';
+import { siteConfig } from '../../../site.config';
+import { absUrl, breadcrumbLd } from '../../../utils/seo';
+import { guideLang, guideSlug, guideMeta } from '../../../utils/guides';
+
+export function getStaticPaths() {
+  return contentLangs.flatMap((lang) => toolSlugs.map((tool) => ({ params: { lang, tool } })));
+}
+const lang = Astro.params.lang as ContentLang;
+const tool = Astro.params.tool as ToolSlug;
+const c = toolsContent[lang];
+const tc = c.tools[tool];
+const path = localePath(lang, `tools/${tool}/`);
+const guides = (await getCollection('guides'))
+  .filter((g) => guideLang(g) === lang && tc.guides.includes(guideSlug(g)))
+  .sort((a, b) => tc.guides.indexOf(guideSlug(a)) - tc.guides.indexOf(guideSlug(b)));
+
+const jsonLd = [
+  {
+    '@type': 'WebApplication',
+    name: tc.title,
+    url: absUrl(path),
+    description: tc.description,
+    applicationCategory: 'GameApplication',
+    operatingSystem: 'Any (web browser)',
+    inLanguage: lang,
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    publisher: { '@type': 'Organization', name: siteConfig.name, url: absUrl('/') },
+  },
+  {
+    '@type': 'FAQPage',
+    inLanguage: lang,
+    mainEntity: tc.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  },
+  breadcrumbLd([
+    [c.home, localePath(lang)],
+    [c.toolsTitle, localePath(lang, 'tools/')],
+    [tc.title, path],
+  ]),
+];
+---
+
+<Layout title={tc.seoTitle} description={tc.description} lang={lang} suffix={`tools/${tool}/`} alternates={contentLangs} jsonLd={jsonLd}>
+  <main class="max-w-3xl mx-auto px-4 pt-10 sm:pt-14">
+    <nav class="text-sm mb-8" aria-label="Breadcrumb">
+      <a href={localePath(lang, 'tools/')} class="inline-flex items-center gap-1.5 text-muted hover:text-fg transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
+        {c.allTools}
+      </a>
+    </nav>
+
+    <header class="mb-8">
+      <h1 class="text-3xl sm:text-[42px] font-bold tracking-tight text-fg leading-[1.15] mb-4">
+        <span aria-hidden="true" class="mr-2">{tc.icon}</span>{tc.title}
+      </h1>
+      <p class="text-lg text-muted leading-relaxed">{tc.intro}</p>
+    </header>
+
+    {tool === 'coin-flip' && <CoinFlip lang={lang} client:load />}
+    {tool === 'probability-calculator' && <ProbabilityCalc lang={lang} client:load />}
+    {tool === 'damage-calculator' && <DamageCalc lang={lang} client:load />}
+
+    <div class="mt-6 p-5 rounded-3xl bg-surface border border-line flex flex-col sm:flex-row sm:items-center gap-4">
+      <img src="/favicon.svg" alt="" width="40" height="40" class="rounded-xl shrink-0" />
+      <p class="text-sm text-fg flex-1 leading-relaxed">{t(lang, 'metaDesc')}</p>
+      <a href={localePath(lang)} class="shrink-0 inline-flex justify-center items-center h-11 px-5 rounded-full bg-accent text-accent-fg font-semibold hover:opacity-90 transition-opacity">{t(lang, 'openCounter')}</a>
+    </div>
+
+    <div class="mt-14 prose dark:prose-invert max-w-none prose-headings:tracking-tight prose-headings:font-semibold prose-h2:mt-10 prose-strong:text-fg">
+      {tc.sections.map((sec) => (
+        <section>
+          <h2>{sec.h}</h2>
+          {/* A paragraph with line breaks is a numbered list. */}
+          {sec.p.map((p) => p.includes('\n')
+            ? <ol>{p.split('\n').map((li) => <li>{li}</li>)}</ol>
+            : <p>{p}</p>)}
+        </section>
+      ))}
+    </div>
+
+    <AdSlot lang={lang} />
+
+    <section class="mt-12">
+      <h2 class="text-2xl font-semibold tracking-tight text-fg mb-5">{c.faqTitle}</h2>
+      <div class="space-y-3">
+        {tc.faq.map((f) => (
+          <details class="group p-5 rounded-2xl bg-surface border border-line">
+            <summary class="cursor-pointer font-medium text-fg list-none flex justify-between gap-4">
+              {f.q}<span class="text-faint group-open:rotate-45 transition-transform" aria-hidden="true">+</span>
+            </summary>
+            <p class="mt-3 text-muted leading-relaxed">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    {guides.length > 0 && (
+      <section class="mt-12">
+        <h2 class="text-xl font-semibold tracking-tight text-fg mb-4">{c.relatedTitle}</h2>
+        <ul class="grid sm:grid-cols-2 gap-3">
+          {guides.map((g) => (
+            <li>
+              <a href={localePath(lang, `guides/${guideSlug(g)}/`)} class="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-line hover:border-line-strong transition-colors h-full">
+                <span class="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-xl shrink-0" aria-hidden="true">{guideMeta(guideSlug(g)).icon}</span>
+                <span class="text-sm font-medium text-fg leading-snug">{g.data.title}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section class="mt-12">
+      <h2 class="text-xl font-semibold tracking-tight text-fg mb-4">{c.otherTools}</h2>
+      <ul class="grid sm:grid-cols-2 gap-3">
+        {toolSlugs.filter((s) => s !== tool).map((s) => (
+          <li>
+            <a href={localePath(lang, `tools/${s}/`)} class="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-line hover:border-line-strong transition-colors h-full">
+              <span class="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-xl shrink-0" aria-hidden="true">{c.tools[s].icon}</span>
+              <span>
+                <span class="block text-sm font-medium text-fg leading-snug">{c.tools[s].title}</span>
+                <span class="block text-xs text-muted mt-0.5">{c.tools[s].card}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <SupportCard lang={lang} />
+  </main>
+</Layout>

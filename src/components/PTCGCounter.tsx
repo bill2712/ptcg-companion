@@ -958,6 +958,7 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
               </button>
               <button onClick={() => { setShowMenu(false); setShowOnboarding(true); }} className={row}><span>{t(lang, 'help')}</span><span className="text-faint">›</span></button>
               <a href={localePath(cl, 'guides/')} className={row}><span>{t(lang, 'navGuides')}</span><span className="text-faint">›</span></a>
+              <a href={localePath(cl, 'tools/')} className={row}><span>{t(lang, 'navTools')}</span><span className="text-faint">›</span></a>
               <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className={`${row} !bg-pink-500/12 text-pink-600 dark:text-pink-300`}><span>♥ {t(lang, 'navSupport')}</span><span>›</span></a>
               <button onClick={startNewMatch} className={`${row} text-rose-600 dark:text-rose-400`}><span>{t(lang, 'newMatch')}</span></button>
             </div>
