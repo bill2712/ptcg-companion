@@ -11,17 +11,30 @@ const description = t(lang, 'metaDesc');
 const ad = siteConfig.adsense.showOnCounter && adsenseClient && siteConfig.adsense.slots.counter
   ? { client: adsenseClient, slot: siteConfig.adsense.slots.counter }
   : null;
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: siteConfig.name,
-  url: new URL(localePath(lang), siteConfig.siteUrl).href,
-  description,
-  applicationCategory: 'GameApplication',
-  operatingSystem: 'Any (web browser)',
-  inLanguage: lang,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-};
+const home = new URL('/', siteConfig.siteUrl).href;
+const jsonLd = [
+  {
+    '@type': 'WebSite',
+    '@id': `${home}#website`,
+    name: siteConfig.name,
+    url: home,
+    inLanguage: lang,
+  },
+  {
+    '@type': 'WebApplication',
+    name: siteConfig.name,
+    url: new URL(localePath(lang), siteConfig.siteUrl).href,
+    description,
+    applicationCategory: 'GameApplication',
+    operatingSystem: 'Any (web browser)',
+    browserRequirements: 'Requires JavaScript',
+    inLanguage: lang,
+    isAccessibleForFree: true,
+    isPartOf: { '@id': `${home}#website` },
+    image: new URL('/og-image.png', siteConfig.siteUrl).href,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  },
+];
 ---
 
 <Layout title={title} description={description} keywords={t(lang, 'metaKeywords')} lang={lang} mode="app" suffix="" jsonLd={jsonLd}>

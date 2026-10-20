@@ -34,6 +34,7 @@ export const siteDictionary: Record<string, Record<string, string>> = {
     privacyUpdated: 'Last updated',
     navCounter: 'Counter',
     navGuides: 'Guides',
+    navTools: 'Tools',
     navAbout: 'About',
     navSupport: 'Support us',
     disclaimer:
@@ -98,6 +99,7 @@ export const siteDictionary: Record<string, Record<string, string>> = {
     privacyUpdated: '最後更新',
     navCounter: '計分器',
     navGuides: '攻略',
+    navTools: '工具',
     navAbout: '關於',
     navSupport: '支持我們',
     disclaimer:
@@ -162,6 +164,7 @@ export const siteDictionary: Record<string, Record<string, string>> = {
     privacyUpdated: '最后更新',
     navCounter: '计分器',
     navGuides: '攻略',
+    navTools: '工具',
     navAbout: '关于',
     navSupport: '支持我们',
     disclaimer:
@@ -226,6 +229,7 @@ export const siteDictionary: Record<string, Record<string, string>> = {
     privacyUpdated: '最終更新',
     navCounter: 'カウンター',
     navGuides: 'ガイド',
+    navTools: 'ツール',
     navAbout: '概要',
     navSupport: '応援する',
     disclaimer:

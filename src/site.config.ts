@@ -5,10 +5,12 @@
 export const siteConfig = {
   name: 'PTCG Companion',
 
-  // Public URL of the site, without a trailing slash.
+  // Public URL of the site, without a trailing slash. Canonical links,
+  // hreflang, the sitemap and robots.txt are all built from it, so it must be
+  // the address the site is really served from.
   // AdSense only accepts a domain you own, so switch this to your custom
-  // domain (e.g. 'https://ptcgcompanion.com') before applying.
-  siteUrl: 'https://ptcg-companion.pages.dev',
+  // domain (e.g. 'https://ptcgcompanion.com') once you have one.
+  siteUrl: 'https://ptcg-companion.bill27122002.workers.dev',
 
   contactEmail: 'beyond01hk@gmail.com',
 
@@ -37,6 +39,12 @@ export const siteConfig = {
     paypal: '', // e.g. 'https://paypal.me/yourname'
   },
 } as const;
+
+// Cloudflare Workers Builds sets WORKERS_CI_BRANCH. Builds of any branch other
+// than the production one are previews: they are kept out of search results so
+// Google never sees duplicate copies of the site.
+const ciBranch = typeof process !== 'undefined' ? process.env.WORKERS_CI_BRANCH : undefined;
+export const isPreviewBuild = Boolean(ciBranch) && !['main', 'master'].includes(ciBranch as string);
 
 export const adsenseClient = siteConfig.adsense.publisherId
   ? `ca-${siteConfig.adsense.publisherId}`
