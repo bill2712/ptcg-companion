@@ -1,7 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { langs, t } from '../../locales/translations';
-import { siteConfig } from '../../site.config';
 
 export function getStaticPaths() {
   return langs.map(lang => ({ params: { lang } }));

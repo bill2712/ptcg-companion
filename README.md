@@ -1,46 +1,37 @@
-# Astro Starter Kit: Basics
+# PTCG Companion
 
-```sh
-npm create astro@latest -- --template basics
-```
+Free Pokémon TCG match assistant: damage counters, Special Conditions, Prize cards, Pokémon Checkup, coin flip and match timer, plus original rule guides. Built with Astro + React + Tailwind.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Commands
 
-## 🚀 Project Structure
+| Command | Action |
+| --- | --- |
+| `npm install` | Install dependencies |
+| `npm run dev` | Dev server at `localhost:4321` |
+| `npm run build` | Build to `./dist/` |
+| `npm run preview` | Preview the build |
 
-Inside of your Astro project, you'll see the following folders and files:
+## Ads and donations: `src/site.config.ts`
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+Everything monetisation-related lives in one file:
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+- `siteUrl`: the public domain. Used for canonical URLs, sitemap, robots.txt.
+- `adsense.publisherId`: e.g. `pub-1234567890123456`. When empty, no AdSense code loads and `/ads.txt` contains only a comment.
+- `adsense.slots.content`: ad unit ID for guide pages. Leave empty to rely on Auto ads.
+- `adsense.showOnCounter`: off by default. Ads next to fast-tapped game buttons cause accidental clicks, which AdSense counts as invalid traffic.
+- `donation.kofi` / `buyMeACoffee` / `paypal`: unused ones are hidden.
 
-## 🧞 Commands
+## AdSense checklist
 
-All commands are run from the root of the project, from a terminal:
+1. Use a domain you own (AdSense does not accept `*.pages.dev` subdomains) and set `siteUrl`.
+2. Fill in `adsense.publisherId`, deploy, then add the site in AdSense. `ads.txt` is generated automatically.
+3. In AdSense > Privacy & messaging, publish the European regulations (GDPR) message. The site already sets Google Consent Mode v2 defaults for EEA/UK/CH.
+4. In Auto ads settings, exclude the counter pages (`/` and `/<lang>/`) if you turn Auto ads on. The AdSense script is only loaded on content pages unless `showOnCounter` is true.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## Content
 
-## 👀 Want to learn more?
+- Guides: `src/content/guides/<lang>/<slug>.md` (English and Traditional Chinese). Same file name in both folders = translation.
+- Counter UI strings: `src/locales/translations.ts`, `siteTranslations.ts`, `onboardTranslations.ts`, `legalTranslations.ts` (missing keys fall back to English).
+- About / Support copy: `src/locales/pageContent.ts`.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+PTCG Companion is a fan-made tool and is not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company.

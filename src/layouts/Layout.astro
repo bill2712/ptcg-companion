@@ -74,7 +74,7 @@ const loadAds = Boolean(adsenseClient) && (mode === 'page' || siteConfig.adsense
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
-    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
     {adsenseClient && <meta name="google-adsense-account" content={adsenseClient} />}
 
@@ -128,10 +128,10 @@ const loadAds = Boolean(adsenseClient) && (mode === 'page' || siteConfig.adsense
     </div>
 
     <footer class={mode === 'app'
-      ? 'bg-neutral-950 text-neutral-500 text-[11px] py-1.5 border-t border-neutral-900 text-center w-full px-4 shrink-0'
+      ? 'bg-neutral-950 text-neutral-500 text-[10px] py-1 border-t border-neutral-900 w-full px-2 shrink-0'
       : 'bg-neutral-950 text-neutral-500 text-xs py-8 border-t border-neutral-800 w-full px-4 mt-12'}>
       <div class="max-w-4xl mx-auto flex flex-col items-center gap-2">
-        <nav class="flex flex-wrap justify-center gap-x-5 gap-y-1" aria-label="Footer">
+        <nav class={mode === 'app' ? 'flex justify-center gap-x-3 whitespace-nowrap overflow-x-auto hide-scrollbar max-w-full' : 'flex flex-wrap justify-center gap-x-5 gap-y-1'} aria-label="Footer">
           <a href={localePath(cl, 'guides/')} class="hover:text-neutral-300">{t(lang, 'navGuides')}</a>
           <a href={localePath(cl, 'about/')} class="hover:text-neutral-300">{t(lang, 'navAbout')}</a>
           <a href={localePath(cl, 'support/')} class="hover:text-pink-300">♥ {t(lang, 'navSupport')}</a>
