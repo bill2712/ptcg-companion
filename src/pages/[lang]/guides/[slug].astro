@@ -1,0 +1,91 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import AdSlot from '../../../components/AdSlot.astro';
+import SupportCard from '../../../components/SupportCard.astro';
+import { localePath, t } from '../../../locales/translations';
+import { pageContent } from '../../../locales/pageContent';
+import { siteConfig } from '../../../site.config';
+import { guideLang, guideSlug, guideMeta, readingMinutes } from '../../../utils/guides';
+
+export async function getStaticPaths() {
+  const all = await getCollection('guides');
+  return all.map((entry) => {
+    const lang = guideLang(entry);
+    const slug = guideSlug(entry);
+    const translations = all.filter((g) => guideSlug(g) === slug).map(guideLang);
+    const related = all
+      .filter((g) => guideLang(g) === lang && g.id !== entry.id)
+      .sort((a, b) => a.data.order - b.data.order);
+    return { params: { lang, slug }, props: { entry, translations, related } };
+  });
+}
+
+const { entry, translations, related } = Astro.props;
+const { lang, slug } = Astro.params as { lang: 'en' | 'zh-TW'; slug: string };
+const c = pageContent[lang];
+const m = guideMeta(slug);
+const { Content } = await render(entry);
+const url = new URL(localePath(lang, `guides/${slug}/`), siteConfig.siteUrl).href;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: entry.data.title,
+  description: entry.data.description,
+  dateModified: entry.data.updated.toISOString(),
+  inLanguage: lang,
+  mainEntityOfPage: url,
+  author: { '@type': 'Organization', name: siteConfig.name },
+  publisher: { '@type': 'Organization', name: siteConfig.name },
+};
+const dateStr = entry.data.updated.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<Layout title={`${entry.data.title} - PTCG Companion`} description={entry.data.description} lang={lang} suffix={`guides/${slug}/`} alternates={translations} jsonLd={jsonLd}>
+  <main class="max-w-3xl mx-auto px-4 pt-10 sm:pt-14">
+    <nav class="text-sm mb-8" aria-label="Breadcrumb">
+      <a href={localePath(lang, 'guides/')} class="inline-flex items-center gap-1.5 text-muted hover:text-fg transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
+        {c.allGuides}
+      </a>
+    </nav>
+    <article>
+      <header class="mb-10">
+        <span class="w-14 h-14 rounded-2xl bg-surface border border-line flex items-center justify-center text-3xl mb-6" aria-hidden="true">{m.icon}</span>
+        <h1 class="text-3xl sm:text-[42px] font-bold tracking-tight text-fg leading-[1.15] mb-4">{entry.data.title}</h1>
+        <p class="text-lg text-muted leading-relaxed mb-5">{entry.data.description}</p>
+        <p class="text-sm text-faint">{c.updated} <time datetime={entry.data.updated.toISOString()}>{dateStr}</time> · {readingMinutes(entry.body)} {c.minRead}</p>
+      </header>
+      <div class="prose dark:prose-invert max-w-none prose-headings:tracking-tight prose-headings:font-semibold prose-headings:scroll-mt-24 prose-h2:mt-12 prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-strong:text-fg prose-blockquote:border-accent prose-blockquote:bg-accent-soft prose-blockquote:py-1 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-table:text-sm prose-th:text-left prose-li:marker:text-faint">
+        <Content />
+      </div>
+    </article>
+
+    <div class="my-12 p-6 rounded-3xl bg-surface border border-line flex flex-col sm:flex-row sm:items-center gap-4">
+      <img src="/favicon.svg" alt="" width="48" height="48" class="rounded-xl shrink-0" />
+      <p class="text-fg flex-1 leading-relaxed">{t(lang, 'metaDesc')}</p>
+      <a href={localePath(lang)} class="shrink-0 inline-flex justify-center items-center h-11 px-5 rounded-full bg-accent text-accent-fg font-semibold hover:opacity-90 transition-opacity">{t(lang, 'openCounter')}</a>
+    </div>
+
+    <AdSlot lang={lang} />
+
+    <section class="mt-12">
+      <h2 class="text-xl font-semibold tracking-tight text-fg mb-4">{c.moreGuides}</h2>
+      <ul class="grid sm:grid-cols-2 gap-3">
+        {related.map((g) => {
+          const rs = guideSlug(g);
+          return (
+            <li>
+              <a href={localePath(lang, `guides/${rs}/`)} class="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-line hover:border-line-strong transition-colors h-full">
+                <span class="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-xl shrink-0" aria-hidden="true">{guideMeta(rs).icon}</span>
+                <span class="text-sm font-medium text-fg leading-snug">{g.data.title}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+
+    <SupportCard lang={lang} />
+  </main>
+</Layout>

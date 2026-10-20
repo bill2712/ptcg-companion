@@ -10,27 +10,27 @@ const { lang } = Astro.params;
 const title = `${t(lang as string, 'termsTitle')} - PTCG Companion`;
 ---
 
-<Layout title={title} lang={lang}>
-  <div class="min-h-screen bg-black text-neutral-300 py-12 px-6 pb-24">
-    <div class="max-w-3xl mx-auto bg-neutral-900 border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-      <h1 class="text-3xl font-black text-white mb-6">{t(lang as string, 'termsTitle')}</h1>
+<Layout title={title} lang={lang} suffix="terms-of-service/">
+  <main class="text-muted py-12 sm:py-16 px-4">
+    <div class="max-w-2xl mx-auto">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-fg mb-8">{t(lang as string, 'termsTitle')}</h1>
       
-      <div class="space-y-6 text-sm leading-relaxed">
+      <div class="space-y-8 text-[15px] leading-relaxed">
         <section>
-          <h2 class="text-xl font-bold text-indigo-400 mb-2">{t(lang as string, 'termsAppUsage')}</h2>
-          <p>{t(lang as string, 'termsAppUsageDesc').split('localStorage')[0]}<code>localStorage</code>{t(lang as string, 'termsAppUsageDesc').split('localStorage')[1]}</p>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'termsAppUsage')}</h2>
+          <p>{t(lang as string, 'termsAppUsageDesc').split('localStorage')[0]}<code class="px-1.5 py-0.5 rounded-md bg-surface-2 text-fg text-[13px]">localStorage</code>{t(lang as string, 'termsAppUsageDesc').split('localStorage')[1]}</p>
         </section>
 
         <section>
-          <h2 class="text-xl font-bold text-indigo-400 mb-2">{t(lang as string, 'termsData')}</h2>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'termsData')}</h2>
           <p>{t(lang as string, 'termsDataDesc')}</p>
         </section>
 
         <section>
-          <h2 class="text-xl font-bold text-indigo-400 mb-2">{t(lang as string, 'termsAds')}</h2>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'termsAds')}</h2>
           <p>{t(lang as string, 'termsAdsDesc')}</p>
         </section>
       </div>
     </div>
-  </div>
+  </main>
 </Layout>

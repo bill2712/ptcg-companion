@@ -1,36 +1,33 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { langs, t } from '../locales/translations';
+import { langs, t, langLabels, localePath, toContentLang } from '../locales/translations';
 
 type ElementType = 'None' | 'Grass' | 'Fire' | 'Water' | 'Lightning' | 'Psychic' | 'Fighting' | 'Darkness' | 'Metal' | 'Dragon' | 'Colorless' | 'Stellar';
+type PlayerId = 'p1' | 'p2';
+/** -1 = Active Pokémon, 0-4 = Bench slot. */
+type Target = number;
 
-const elementThemeMap: Record<ElementType, string> = {
-  None: 'border-neutral-800 shadow-none',
-  Grass: 'shadow-[inset_0_0_30px_rgba(34,197,94,0.15)] border-green-500',
-  Fire: 'shadow-[inset_0_0_30px_rgba(239,68,68,0.15)] border-red-500',
-  Water: 'shadow-[inset_0_0_30px_rgba(59,130,246,0.15)] border-blue-500',
-  Lightning: 'shadow-[inset_0_0_30px_rgba(234,179,8,0.15)] border-yellow-400',
-  Psychic: 'shadow-[inset_0_0_30px_rgba(168,85,247,0.15)] border-purple-500',
-  Fighting: 'shadow-[inset_0_0_30px_rgba(217,119,6,0.15)] border-amber-600',
-  Darkness: 'shadow-[inset_0_0_30px_rgba(31,41,55,0.4)] border-gray-600',
-  Metal: 'shadow-[inset_0_0_30px_rgba(156,163,175,0.15)] border-gray-400',
-  Dragon: 'shadow-[inset_0_0_30px_rgba(202,138,4,0.15)] border-yellow-600',
-  Colorless: 'shadow-[inset_0_0_30px_rgba(226,232,240,0.15)] border-slate-300',
-  Stellar: 'shadow-[inset_0_0_30px_rgba(99,102,241,0.15)] border-indigo-400',
+// Soft type tint for the player panel (hex, used at low opacity).
+const typeHex: Record<ElementType, string> = {
+  None: '', Grass: '#22c55e', Fire: '#ef4444', Water: '#3b82f6', Lightning: '#eab308', Psychic: '#a855f7',
+  Fighting: '#d97706', Darkness: '#64748b', Metal: '#94a3b8', Dragon: '#ca8a04', Colorless: '#cbd5e1', Stellar: '#6366f1',
 };
 
 const typeColors: Record<ElementType, string> = {
-  None: 'bg-neutral-800', Grass: 'bg-green-600', Fire: 'bg-red-600', Water: 'bg-blue-600',
+  None: 'bg-zinc-500', Grass: 'bg-green-600', Fire: 'bg-red-600', Water: 'bg-blue-600',
   Lightning: 'bg-yellow-400', Psychic: 'bg-purple-600', Fighting: 'bg-amber-700', Darkness: 'bg-gray-800',
-  Metal: 'bg-gray-400', Dragon: 'bg-yellow-700', Colorless: 'bg-slate-300', Stellar: 'bg-indigo-500'
+  Metal: 'bg-gray-400', Dragon: 'bg-yellow-700', Colorless: 'bg-slate-300', Stellar: 'bg-indigo-500',
 };
 
 const typeInitials: Record<ElementType, string> = {
-  None: '', Grass: 'G', Fire: 'F', Water: 'W', Lightning: 'L', Psychic: 'P', 
-  Fighting: 'Fg', Darkness: 'D', Metal: 'M', Dragon: 'R', Colorless: 'C', Stellar: 'S'
+  None: '×', Grass: 'G', Fire: 'F', Water: 'W', Lightning: 'L', Psychic: 'P',
+  Fighting: 'Fg', Darkness: 'D', Metal: 'M', Dragon: 'R', Colorless: 'C', Stellar: 'S',
 };
 
+const types: ElementType[] = ['None', 'Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Dragon', 'Colorless', 'Stellar'];
+
 interface PlayerState {
-  hp: number;
+  hp: number; // damage on the Active Pokémon
+  bench: number[]; // damage on each of the 5 Bench slots
   poisoned: boolean;
   burned: boolean;
   asleep: boolean;
@@ -41,312 +38,581 @@ interface PlayerState {
   aceSpecUsed: boolean;
   abilityUsed: boolean;
   retreatUsed: boolean;
-  prizes: boolean[];
+  energyUsed: boolean;
+  supporterUsed: boolean;
+  prizes: boolean[]; // true = Prize card still face down
   activeType: ElementType;
 }
 
+const BENCH_SIZE = 5;
+const noConditions = { poisoned: false, burned: false, asleep: false, paralyzed: false, confused: false };
+
 const initialPlayerState = (): PlayerState => ({
   hp: 0,
-  poisoned: false,
-  burned: false,
-  asleep: false,
-  paralyzed: false,
-  confused: false,
+  bench: Array(BENCH_SIZE).fill(0),
+  ...noConditions,
   vstarUsed: false,
   gxUsed: false,
   aceSpecUsed: false,
   abilityUsed: false,
   retreatUsed: false,
+  energyUsed: false,
+  supporterUsed: false,
   prizes: [true, true, true, true, true, true],
   activeType: 'None',
 });
 
-// TypeScript Interfaces for Native Web APIs
-interface WakeLockSentinel {
-  release(): Promise<void>;
+type LogEntry = {
+  turn: number;
+  k: 'dmg' | 'ko' | 'switch' | 'cond' | 'prize' | 'coin' | 'turn' | 'checkup' | 'win' | 'undo';
+  p?: PlayerId;
+  target?: Target;
+  n?: number;
+  h?: number;
+  c?: string;
+  on?: boolean;
+};
+
+const DEFAULT_DURATION = 30 * 60;
+const HISTORY_LIMIT = 20;
+const LOG_LIMIT = 300;
+const STORAGE_KEY = 'ptcg_companion_match_v1';
+const NAMES_KEY = 'ptcg_companion_names';
+const SERIES_KEY = 'ptcg_companion_series';
+
+interface Game {
+  p1: PlayerState;
+  p2: PlayerState;
+  history: Record<PlayerId, PlayerState[]>;
+  log: LogEntry[];
+  turn: number;
+  firstPlayer: PlayerId | null;
+  duration: number;
+  timeLeft: number;
+  winnerDismissed: boolean;
 }
-interface NavigatorWithWakeLock extends Navigator {
-  wakeLock?: { request(type: 'screen'): Promise<WakeLockSentinel> };
-}
+
+interface Series { p1: number; p2: number }
+
+const newGame = (duration = DEFAULT_DURATION): Game => ({
+  p1: initialPlayerState(),
+  p2: initialPlayerState(),
+  history: { p1: [], p2: [] },
+  log: [],
+  turn: 1,
+  firstPlayer: null,
+  duration,
+  timeLeft: duration,
+  winnerDismissed: false,
+});
+
+const isPristine = (g: Game) =>
+  g.turn === 1 && g.timeLeft === g.duration && g.history.p1.length === 0 && g.history.p2.length === 0;
+
+const readJson = <T,>(key: string): T | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+};
+
+const loadGame = (): Game | null => {
+  const parsed = readJson<Partial<Game>>(STORAGE_KEY);
+  if (!parsed) return null;
+  const fix = (p?: Partial<PlayerState>) => {
+    const s = { ...initialPlayerState(), ...p };
+    if (!Array.isArray(s.bench) || s.bench.length !== BENCH_SIZE) s.bench = Array(BENCH_SIZE).fill(0);
+    return s;
+  };
+  return {
+    ...newGame(parsed.duration ?? DEFAULT_DURATION),
+    ...parsed,
+    p1: fix(parsed.p1),
+    p2: fix(parsed.p2),
+    history: { p1: (parsed.history?.p1 ?? []).map(fix), p2: (parsed.history?.p2 ?? []).map(fix) },
+    log: parsed.log ?? [],
+  };
+};
+
+const fmt = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ''));
+
+const randomBit = () => {
+  const buf = new Uint8Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0] < 128;
+};
+
+/** Append to the log, merging repeated damage taps on the same Pokémon into one line. */
+const addLog = (log: LogEntry[], e: LogEntry): LogEntry[] => {
+  const last = log[log.length - 1];
+  if (e.k === 'dmg' && last?.k === 'dmg' && last.p === e.p && last.target === e.target && last.turn === e.turn) {
+    const n = (last.n ?? 0) + (e.n ?? 0);
+    return n === 0 ? log.slice(0, -1) : [...log.slice(0, -1), { ...last, n }];
+  }
+  return [...log, e].slice(-LOG_LIMIT);
+};
+
+// Asleep, Paralyzed and Confused are shown by turning the card, so only one can apply at a time.
+const ROTATION = ['asleep', 'paralyzed', 'confused'] as const;
+type Condition = 'poisoned' | 'burned' | (typeof ROTATION)[number];
+const conditionKey: Record<Condition, string> = { poisoned: 'poison', burned: 'burn', asleep: 'asleep', paralyzed: 'para', confused: 'confuse' };
+
+interface ScreenLock { release(): Promise<void> }
+type WakeLockNav = { wakeLock?: { request(type: 'screen'): Promise<ScreenLock> } };
 
 interface PlayerAreaProps {
   state: PlayerState;
-  player: 'p1' | 'p2';
+  player: PlayerId;
+  name: string;
+  target: Target;
   historyLen: number;
   isRotated: boolean;
   isAnim: boolean;
   lang: string;
-  updatePlayer: (player: 'p1' | 'p2', updates: Partial<PlayerState>, skipFeedback?: boolean) => void;
-  undoPlayer: (player: 'p1' | 'p2') => void;
+  update: (player: PlayerId, updates: Partial<PlayerState>, log?: Omit<LogEntry, 'turn'>) => void;
+  setTarget: (player: PlayerId, target: Target) => void;
+  adjust: (player: PlayerId, target: Target, amount: number) => void;
+  knockOut: (player: PlayerId, target: Target) => void;
+  switchIn: (player: PlayerId, slot: number) => void;
+  toggleCondition: (player: PlayerId, c: Condition) => void;
+  undo: (player: PlayerId) => void;
+  onHint: (msg: string) => void;
 }
 
-const PlayerArea = ({ state, player, historyLen, isRotated, isAnim, lang, updatePlayer, undoPlayer }: PlayerAreaProps) => {
-  const adjustHp = (amount: number) => updatePlayer(player, { hp: Math.max(0, Math.min(990, state.hp + amount)) });
+const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim, lang, update, setTarget, adjust, knockOut, switchIn, toggleCondition, undo, onHint }: PlayerAreaProps) => {
+  const [typeOpen, setTypeOpen] = useState(false);
   const togglePrize = (index: number) => {
-    const newPrizes = [...state.prizes];
-    newPrizes[index] = !newPrizes[index];
-    updatePlayer(player, { prizes: newPrizes });
+    const prizes = [...state.prizes];
+    prizes[index] = !prizes[index];
+    update(player, { prizes }, { k: 'prize', p: player, n: prizes.filter(Boolean).length });
   };
+  const dmg = target < 0 ? state.hp : state.bench[target];
+  const targetLabel = target < 0 ? t(lang, 'active') : `${t(lang, 'bench')} ${target + 1}`;
 
-  const types: ElementType[] = ['Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Dragon', 'Colorless', 'Stellar'];
+  // A Special Condition colours the panel outline so both players can see it.
+  const condBorder = state.poisoned ? 'border-green-500/70' : state.burned ? 'border-orange-500/70' : state.paralyzed ? 'border-yellow-500/70'
+    : state.asleep ? 'border-blue-500/70' : state.confused ? 'border-purple-500/70' : 'border-line';
+  const tint = typeHex[state.activeType];
 
-  // Layered Status Ring overlay logic
-  let statusRing = '';
-  if (state.poisoned) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-green-500 animate-pulse shadow-[0_0_25px_rgba(34,197,94,0.6)]';
-  else if (state.burned) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-orange-500 animate-pulse shadow-[0_0_25px_rgba(249,115,22,0.6)]';
-  else if (state.paralyzed) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-yellow-500 animate-pulse shadow-[0_0_25px_rgba(234,179,8,0.6)]';
-  else if (state.asleep) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-blue-500 animate-pulse shadow-[0_0_25px_rgba(59,130,246,0.6)]';
-  else if (state.confused) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-purple-500 animate-pulse shadow-[0_0_25px_rgba(168,85,247,0.6)]';
+  const conditions: { key: Condition; on: string; dot: string }[] = [
+    { key: 'poisoned', on: 'bg-green-500 text-white', dot: 'bg-green-500' },
+    { key: 'burned', on: 'bg-orange-500 text-white', dot: 'bg-orange-500' },
+    { key: 'asleep', on: 'bg-blue-500 text-white', dot: 'bg-blue-500' },
+    { key: 'paralyzed', on: 'bg-yellow-400 text-neutral-900', dot: 'bg-yellow-400' },
+    { key: 'confused', on: 'bg-purple-500 text-white', dot: 'bg-purple-500' },
+  ];
+
+  const perTurn: { key: 'energyUsed' | 'supporterUsed' | 'retreatUsed' | 'abilityUsed'; label: string; dot: string }[] = [
+    { key: 'energyUsed', label: t(lang, 'energy'), dot: 'bg-amber-400' },
+    { key: 'supporterUsed', label: t(lang, 'supporter'), dot: 'bg-sky-400' },
+    { key: 'retreatUsed', label: t(lang, 'retreatUsed'), dot: 'bg-zinc-400' },
+    { key: 'abilityUsed', label: t(lang, 'ability'), dot: 'bg-rose-400' },
+  ];
+
+  const slots: Target[] = [-1, 0, 1, 2, 3, 4];
 
   return (
-    <div className={`flex-1 min-h-0 flex flex-col justify-between p-3 m-2 bg-gradient-to-b from-neutral-900 to-neutral-950 border-2 rounded-2xl relative transition-all duration-300 ${elementThemeMap[state.activeType]} ${statusRing} ${isRotated ? 'rotate-180' : ''}`}>
-      
-      {/* Type Dock */}
-      <div className="flex justify-between items-center w-full mb-1">
-        <div className="flex gap-1">
-          <button onClick={() => updatePlayer(player, { activeType: 'None' })} className="w-4 h-4 rounded-full border border-neutral-700 bg-neutral-800 text-[8px] flex items-center justify-center text-neutral-500 font-bold transition-all hover:bg-neutral-700">x</button>
-          {types.map(elementType => (
-            <button 
-              key={elementType} onClick={() => updatePlayer(player, { activeType: elementType })}
-              className={`w-4 h-4 rounded-full border border-neutral-900 shadow-sm transition-all flex items-center justify-center text-[7px] font-black text-white/90 ${typeColors[elementType]} ${state.activeType === elementType ? 'scale-125 ring-1 ring-white' : 'opacity-50 grayscale-[50%]'}`}
-            >
-              {typeInitials[elementType]}
-            </button>
-          ))}
+    <section
+      aria-label={name}
+      className={`flex-1 min-h-0 overflow-y-auto hide-scrollbar flex flex-col gap-1 p-2 mx-1.5 my-1 bg-surface border-2 rounded-[22px] relative transition-colors duration-300 ${condBorder} ${isRotated ? 'rotate-180' : ''}`}
+      style={tint ? { backgroundImage: `linear-gradient(180deg, ${tint}22 0%, transparent 55%)` } : undefined}
+    >
+      {/* Active + Bench selector */}
+      <div className="flex items-center gap-1 w-full">
+        <div className="flex gap-1 flex-1" role="radiogroup" aria-label={`${t(lang, 'active')} / ${t(lang, 'bench')}`}>
+          {slots.map((s) => {
+            const d = s < 0 ? state.hp : state.bench[s];
+            const sel = target === s;
+            return (
+              <button
+                key={s}
+                role="radio"
+                aria-checked={sel}
+                aria-label={`${s < 0 ? t(lang, 'active') : `${t(lang, 'bench')} ${s + 1}`}: ${d}`}
+                onClick={() => setTarget(player, s)}
+                className={`press flex-1 h-[30px] rounded-[10px] flex flex-col items-center justify-center leading-none ${sel ? 'bg-accent text-accent-fg shadow-sm' : 'bg-surface-2 text-muted'} ${s < 0 && !sel ? 'ring-1 ring-inset ring-line-strong' : ''}`}
+              >
+                <span className={`text-[8px] font-semibold ${sel ? 'opacity-80' : 'opacity-60'}`}>{s < 0 ? 'A' : `B${s + 1}`}</span>
+                <span className={`text-[11px] font-bold tabular ${!sel && d > 0 ? 'text-rose-500 dark:text-rose-400' : ''}`}>{d > 0 ? d : '·'}</span>
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => (target < 0 ? onHint(t(lang, 'pickBenchFirst')) : switchIn(player, target))}
+          aria-label={t(lang, 'switchToActive')}
+          title={t(lang, 'switchToActive')}
+          className={`press w-8 h-[30px] rounded-[10px] flex items-center justify-center ${target < 0 ? 'bg-surface-2 text-faint' : 'bg-accent-soft text-accent'}`}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 4v16M7 4 3 8M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4" /></svg>
+        </button>
+        <div className="relative">
+          <button
+            onClick={() => setTypeOpen((o) => !o)}
+            aria-label={`${t(lang, 'type')}: ${state.activeType}`}
+            aria-expanded={typeOpen}
+            className={`press w-[30px] h-[30px] rounded-full ring-2 ring-surface-3 text-[10px] font-bold text-white flex items-center justify-center ${typeColors[state.activeType]}`}
+            style={state.activeType === 'None' ? { background: 'conic-gradient(#22c55e, #ef4444, #3b82f6, #eab308, #a855f7, #d97706, #22c55e)' } : undefined}
+          >{state.activeType === 'None' ? '' : typeInitials[state.activeType]}</button>
+          {typeOpen && (
+            <div className="absolute right-0 top-9 z-30 p-2 rounded-2xl bg-surface border border-line-strong shadow-2xl grid grid-cols-4 gap-1.5 w-[152px]" style={{ animation: 'sheetIn 0.15s ease-out' }} role="group" aria-label={t(lang, 'type')}>
+              {types.map((el) => (
+                <button
+                  key={el}
+                  onClick={() => { update(player, { activeType: el }); setTypeOpen(false); }}
+                  aria-label={el}
+                  aria-pressed={state.activeType === el}
+                  className={`press w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${typeColors[el]} ${state.activeType === el ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface' : ''}`}
+                >{typeInitials[el]}</button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* HP Radar & Turn Mechanics */}
-      <div className="flex flex-col w-full mt-1">
-        <div className="flex items-center justify-between w-full mb-1">
-          <span className="text-neutral-500 text-[10px] tracking-widest font-bold uppercase">{t(lang, 'damageCounters')}</span>
-          <button 
-            onClick={() => undoPlayer(player)} 
+      {/* Damage readout + per-turn toggles */}
+      <div className="flex items-stretch justify-between w-full gap-1.5 flex-[1.4] min-h-16 max-h-36">
+        <div className="bg-surface-2 rounded-2xl w-[148px] shrink-0 flex flex-col items-center justify-center relative">
+          <span className="absolute top-1.5 left-0 right-0 text-center text-[9px] font-medium text-muted truncate px-8">{name} · {targetLabel}</span>
+          <span
+            key={isAnim ? 'a' : 'b'}
+            aria-live="polite"
+            aria-label={`${targetLabel}: ${dmg}`}
+            className={`text-[clamp(34px,7vh,52px)] leading-none font-semibold tabular tracking-tight mt-3 ${isAnim ? 'bump' : ''} ${dmg > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-faint'}`}
+          >{dmg}</span>
+          <button
+            onClick={() => undo(player)}
             disabled={historyLen === 0}
-            className={`text-[9px] font-bold tracking-widest uppercase border px-2 py-0.5 rounded transition-all ${historyLen > 0 ? 'text-blue-400 border-blue-900 bg-blue-950/30 active:scale-95' : 'text-neutral-700 border-neutral-800 bg-transparent opacity-50'}`}
+            aria-label={t(lang, 'undo')}
+            title={t(lang, 'undo')}
+            className={`press absolute left-1 bottom-1 w-7 h-7 rounded-lg flex items-center justify-center ${historyLen > 0 ? 'text-fg hover:bg-surface-3' : 'text-faint opacity-40'}`}
           >
-            {t(lang, 'undo')}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>
           </button>
+          <button
+            onClick={() => knockOut(player, target)}
+            aria-label={`${t(lang, 'ko')}: ${targetLabel}`}
+            title={t(lang, 'ko')}
+            className="press absolute right-1 bottom-1 h-7 px-1.5 rounded-lg text-[10px] font-semibold text-muted hover:text-fg hover:bg-surface-3"
+          >{t(lang, 'ko')}</button>
         </div>
-        
-        <div className="flex items-center justify-between w-full">
-          <div className={`bg-red-950 border-4 rounded-xl w-32 h-20 flex flex-col items-center justify-center relative transition-all duration-300 ${state.hp > 0 ? 'border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.6)] animate-pulse' : 'border-red-800 shadow-inner'} ${isAnim ? 'scale-110' : 'scale-100'}`}>
-            <span className="text-5xl font-black font-mono tracking-tighter text-red-500" style={{ textShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
-              {state.hp}
-            </span>
-            <button onClick={() => updatePlayer(player, { hp: 0 })} className="absolute bottom-3 right-4 text-neutral-500 text-[8px] hover:text-white uppercase active:scale-95 font-bold transition-colors">{t(lang, 'reset')}</button>
-          </div>
 
-          <div className="flex flex-col gap-1 w-28">
-            <button onClick={() => updatePlayer(player, { retreatUsed: !state.retreatUsed })} className={`h-9 rounded font-bold text-[8px] sm:text-[9px] uppercase tracking-wider border transition-all ${state.retreatUsed ? 'bg-neutral-800 border-neutral-700 text-neutral-500 line-through' : 'bg-neutral-900 border-neutral-600 text-neutral-300'}`}>
-              {t(lang, 'retreatUsed')}
-            </button>
-            <button onClick={() => updatePlayer(player, { abilityUsed: !state.abilityUsed })} className={`h-9 rounded font-bold text-[8px] sm:text-[9px] uppercase tracking-wider border transition-all ${state.abilityUsed ? 'bg-neutral-800 border-neutral-700 text-neutral-500 line-through' : 'bg-rose-950 border-rose-800 text-rose-400'}`}>
-              {t(lang, 'ability')}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Prize Cards & Keypad */}
-      <div className="flex flex-col gap-2 mt-2">
-        <div className="grid grid-cols-6 gap-1 w-full">
-          {state.prizes.map((isActive, idx) => (
-            <button key={idx} onClick={() => togglePrize(idx)} className={`h-7 rounded font-black text-xs transition-all border ${isActive ? 'bg-indigo-950 border-indigo-500 text-indigo-400' : 'bg-neutral-900 border-neutral-800 text-neutral-700 opacity-25 blur-[0.2px] line-through'}`}>
-              {idx + 1}
+        <div className="grid grid-cols-2 gap-1 flex-1 max-w-[180px]">
+          {perTurn.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => update(player, { [p.key]: !state[p.key] })}
+              aria-pressed={state[p.key]}
+              className={`press rounded-xl text-[10px] font-medium leading-tight px-1.5 flex items-center justify-center gap-1 ${state[p.key] ? 'bg-transparent border border-dashed border-line-strong text-faint' : 'bg-surface-2 text-fg'}`}
+            >
+              {state[p.key]
+                ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0"><path d="M20 6 9 17l-5-5" /></svg>
+                : <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.dot}`} aria-hidden="true" />}
+              <span className={state[p.key] ? 'line-through' : ''}>{p.label}</span>
             </button>
           ))}
         </div>
-
-        <div className="grid grid-cols-4 gap-2 w-full">
-          <button onClick={() => adjustHp(-10)} className="h-12 rounded-xl font-black text-lg bg-neutral-800 text-neutral-300 active:scale-95 border border-neutral-700">-10</button>
-          <button onClick={() => adjustHp(10)} className="h-12 rounded-xl font-black text-lg bg-emerald-950 text-emerald-400 border border-emerald-800 active:scale-95">+10</button>
-          <button onClick={() => adjustHp(50)} className="h-12 rounded-xl font-black text-lg bg-emerald-950 text-emerald-400 border border-emerald-800 active:scale-95">+50</button>
-          <button onClick={() => adjustHp(100)} className="h-12 rounded-xl font-black text-lg bg-emerald-950 text-emerald-400 border border-emerald-800 active:scale-95">+100</button>
-        </div>
       </div>
 
-      {/* Status Conditions */}
-      <div className="grid grid-cols-5 gap-1 w-full mt-2">
-        <button onClick={() => updatePlayer(player, { poisoned: !state.poisoned })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.poisoned ? 'shadow-[0_0_15px_rgba(34,197,94,0.6)] border-green-400 bg-green-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'poison')}</button>
-        <button onClick={() => updatePlayer(player, { burned: !state.burned })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.burned ? 'shadow-[0_0_15px_rgba(249,115,22,0.6)] border-orange-400 bg-orange-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'burn')}</button>
-        <button onClick={() => updatePlayer(player, { asleep: !state.asleep })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.asleep ? 'shadow-[0_0_15px_rgba(59,130,246,0.6)] border-blue-400 bg-blue-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'asleep')}</button>
-        <button onClick={() => updatePlayer(player, { paralyzed: !state.paralyzed })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.paralyzed ? 'shadow-[0_0_15px_rgba(234,179,8,0.6)] border-yellow-400 bg-yellow-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'para')}</button>
-        <button onClick={() => updatePlayer(player, { confused: !state.confused })} className={`h-8 rounded-lg font-bold text-[7px] sm:text-[8px] uppercase tracking-wider border transition-colors ${state.confused ? 'shadow-[0_0_15px_rgba(168,85,247,0.6)] border-purple-400 bg-purple-500 text-white' : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}>{t(lang, 'confuse')}</button>
+      {/* Prize cards */}
+      <div className="grid grid-cols-6 gap-1 w-full flex-[0.6] min-h-6 max-h-9" role="group" aria-label="Prize cards">
+        {state.prizes.map((isActive, idx) => (
+          <button
+            key={idx}
+            onClick={() => togglePrize(idx)}
+            aria-pressed={!isActive}
+            aria-label={`Prize ${idx + 1}`}
+            className={`press h-full min-h-6 rounded-md text-[11px] font-semibold tabular ${isActive ? 'bg-gradient-to-br from-violet-500 to-indigo-600 text-white/90 shadow-sm' : 'border border-dashed border-line-strong text-faint'}`}
+          >{idx + 1}</button>
+        ))}
       </div>
 
-      {/* Legacy Markers */}
-      <div className="flex items-center gap-2 w-full mt-2 mb-1">
-        <button onClick={() => updatePlayer(player, { vstarUsed: !state.vstarUsed })} className={`flex-1 h-9 rounded-lg font-black italic tracking-widest text-xs border-2 transition-all ${state.vstarUsed ? 'grayscale contrast-50 opacity-30 blur-[0.5px] border-neutral-700 bg-neutral-800 text-neutral-500' : 'bg-gradient-to-br from-yellow-200 to-yellow-600 text-neutral-950 border-yellow-300 shadow-[0_0_10px_rgba(253,224,71,0.5)]'}`}>VSTAR</button>
-        <button onClick={() => updatePlayer(player, { gxUsed: !state.gxUsed })} className={`flex-1 h-9 rounded-lg font-black italic tracking-widest text-xs border-2 transition-all ${state.gxUsed ? 'grayscale contrast-50 opacity-30 blur-[0.5px] border-neutral-700 bg-neutral-800 text-neutral-500' : 'bg-gradient-to-br from-cyan-400 to-blue-600 text-white border-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.5)]'}`}>GX</button>
-        <button onClick={() => updatePlayer(player, { aceSpecUsed: !state.aceSpecUsed })} className={`flex-1 h-9 rounded-lg font-black italic tracking-widest text-xs border-2 transition-all ${state.aceSpecUsed ? 'grayscale contrast-50 opacity-30 blur-[0.5px] border-neutral-700 bg-neutral-800 text-neutral-500' : 'bg-gradient-to-br from-pink-400 to-fuchsia-600 text-white border-pink-300 shadow-[0_0_10px_rgba(236,72,153,0.5)]'}`}>ACE SPEC</button>
+      {/* Damage keypad (applies to the selected Pokémon) */}
+      <div className="grid grid-cols-4 gap-1.5 w-full flex-1 min-h-10 max-h-[88px]">
+        {[-10, 10, 50, 100].map((n) => (
+          <button
+            key={n}
+            onClick={() => adjust(player, target, n)}
+            className={`press h-full rounded-2xl text-lg font-semibold tabular ${n < 0 ? 'bg-surface-2 text-muted' : 'bg-rose-500/12 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'}`}
+          >{n > 0 ? `+${n}` : `−${-n}`}</button>
+        ))}
       </div>
-    </div>
+
+      {/* Special Conditions (Active Pokémon only) */}
+      <div className="grid grid-cols-5 gap-1 w-full" role="group" aria-label="Special Conditions">
+        {conditions.map((c) => (
+          <button
+            key={c.key}
+            onClick={() => toggleCondition(player, c.key)}
+            aria-pressed={state[c.key]}
+            className={`press h-[26px] rounded-full text-[10px] font-medium px-1 flex items-center justify-center gap-1 ${state[c.key] ? c.on : 'bg-surface-2 text-muted'}`}
+          >
+            {!state[c.key] && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} aria-hidden="true" />}
+            <span className="truncate">{t(lang, conditionKey[c.key])}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Once-per-game markers */}
+      <div className="grid grid-cols-3 gap-1 w-full">
+        {([
+          ['vstarUsed', 'VSTAR', 'text-amber-500 dark:text-amber-300'],
+          ['gxUsed', 'GX', 'text-sky-500 dark:text-sky-300'],
+          ['aceSpecUsed', 'ACE SPEC', 'text-pink-500 dark:text-pink-300'],
+        ] as const).map(([key, text, color]) => (
+          <button
+            key={key}
+            onClick={() => update(player, { [key]: !state[key] })}
+            aria-pressed={state[key]}
+            className={`press h-[26px] rounded-full text-[11px] font-bold tracking-wide ${state[key] ? 'border border-dashed border-line-strong text-faint line-through' : `bg-surface-2 ${color}`}`}
+          >{text}</button>
+        ))}
+      </div>
+    </section>
   );
 };
 
-export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
-  const [p1, setP1] = useState<PlayerState>(initialPlayerState());
-  const [p2, setP2] = useState<PlayerState>(initialPlayerState());
+interface Props {
+  lang?: string;
+  ad?: { client: string; slot: string } | null;
+  supportUrl?: string;
+}
 
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const onboarded = localStorage.getItem('ptcg_companion_onboarded');
-      if (!onboarded) {
-        setShowOnboarding(true);
-      }
-    }
-  }, []);
-
-  const closeOnboarding = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ptcg_companion_onboarded', 'true');
-    }
-    setShowOnboarding(false);
-  };
-  
-  const [historyP1, setHistoryP1] = useState<PlayerState[]>([]);
-  const [historyP2, setHistoryP2] = useState<PlayerState[]>([]);
-
-  const [p1Anim, setP1Anim] = useState(false);
-  const [p2Anim, setP2Anim] = useState(false);
-
-  // Match State
-  const [timeLeft, setTimeLeft] = useState(1800);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }: Props) {
+  const [game, setGame] = useState<Game>(newGame);
+  const [loaded, setLoaded] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [names, setNames] = useState<Record<PlayerId, string>>({ p1: '', p2: '' });
+  const [series, setSeries] = useState<Series>({ p1: 0, p2: 0 });
+  const [targets, setTargets] = useState<Record<PlayerId, Target>>({ p1: -1, p2: -1 });
+  const [anim, setAnim] = useState<Record<PlayerId, boolean>>({ p1: false, p2: false });
   const [coinResult, setCoinResult] = useState<'HEADS' | 'TAILS' | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
-  const [turnCount, setTurnCount] = useState(1);
-  const [firstPlayer, setFirstPlayer] = useState<'p1' | 'p2' | null>(null);
+  const [coinSheet, setCoinSheet] = useState(false);
+  const [coinCount, setCoinCount] = useState(3);
+  const [coinRun, setCoinRun] = useState<boolean[] | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showLog, setShowLog] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [themePref, setThemePref] = useState<'system' | 'light' | 'dark'>('system');
 
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const soundRef = useRef(soundOn);
+  soundRef.current = soundOn;
+  const endsAtRef = useRef<number | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fireFeedback = useCallback(() => {
+  const cl = toContentLang(lang);
+  const supportHref = supportUrl || localePath(cl, 'support/');
+  const nameOf = useCallback((p: PlayerId) => names[p].trim() || t(lang, p === 'p1' ? 'player1' : 'player2'), [names, lang]);
+  const targetLabel = (target?: Target) => (target === undefined || target < 0 ? t(lang, 'active') : `${t(lang, 'bench')} ${target + 1}`);
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  // Restore saved match, names and series (client only, after hydration).
+  useEffect(() => {
     try {
-      if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        navigator.vibrate(12);
+      const saved = loadGame();
+      if (saved) {
+        setGame(saved);
+        if (!isPristine(saved)) showToast(t(lang, 'restored'));
       }
-    } catch (e) {}
+      const n = readJson<Record<PlayerId, string>>(NAMES_KEY);
+      if (n) setNames({ p1: n.p1 ?? '', p2: n.p2 ?? '' });
+      const s = readJson<Series>(SERIES_KEY);
+      if (s) setSeries({ p1: s.p1 ?? 0, p2: s.p2 ?? 0 });
+      if (!localStorage.getItem('ptcg_companion_onboarded')) setShowOnboarding(true);
+      setSoundOn(localStorage.getItem('ptcg_companion_sound') !== 'off');
+    } catch {}
+    setLoaded(true);
+  }, [lang, showToast]);
 
+  useEffect(() => {
+    if (!loaded) return;
     try {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!audioCtxRef.current && AudioContextClass) {
-        audioCtxRef.current = new AudioContextClass();
-      }
-      
-      const ctx = audioCtxRef.current;
-      if (ctx) {
-        if (ctx.state === 'suspended') {
-          ctx.resume().catch(() => {});
-        }
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.04);
-      }
-    } catch (err) {
-      // Ignore audio errors
-    }
-  }, []);
-
-  // Hardware Audio Disposal on Unmount
-  useEffect(() => {
-    return () => {
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.close().catch(() => {});
-      }
-    };
-  }, []);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
+      localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+      localStorage.setItem(SERIES_KEY, JSON.stringify(series));
+    } catch {}
+  }, [game, names, series, loaded]);
 
   useEffect(() => {
-    let wakeLock: WakeLockSentinel | null = null;
-    const nav = navigator as unknown as NavigatorWithWakeLock;
-    
-    const requestWakeLock = async () => {
-      try {
-        if (nav && nav.wakeLock) {
-          wakeLock = await nav.wakeLock.request('screen');
-        }
-      } catch (err) {}
-    };
-    
-    requestWakeLock();
-    
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        requestWakeLock();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => { 
-      if (wakeLock !== null) {
-        wakeLock.release().catch(() => {});
-      }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+    const w = window as unknown as { __getThemePref?: () => 'system' | 'light' | 'dark' };
+    if (w.__getThemePref) setThemePref(w.__getThemePref());
   }, []);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isTimerRunning && timeLeft > 0) {
-      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isTimerRunning, timeLeft]);
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+  const chooseTheme = (v: 'system' | 'light' | 'dark') => {
+    (window as unknown as { __setTheme?: (v: string) => void }).__setTheme?.(v);
+    setThemePref(v);
   };
 
-  const updatePlayer = useCallback((player: 'p1' | 'p2', updates: Partial<PlayerState>, skipFeedback = false) => {
-    if (!skipFeedback) fireFeedback();
-    if (player === 'p1') {
-      if (updates.hp !== undefined) {
-        setP1Anim(true);
-        setTimeout(() => setP1Anim(false), 200);
-      }
-      setHistoryP1(h => [...h, p1].slice(-20));
-      setP1(prev => ({ ...prev, ...updates }));
-    } else {
-      if (updates.hp !== undefined) {
-        setP2Anim(true);
-        setTimeout(() => setP2Anim(false), 200);
-      }
-      setHistoryP2(h => [...h, p2].slice(-20));
-      setP2(prev => ({ ...prev, ...updates }));
-    }
-  }, [fireFeedback, p1, p2]);
+  const closeOnboarding = () => {
+    try { localStorage.setItem('ptcg_companion_onboarded', 'true'); } catch {}
+    setShowOnboarding(false);
+  };
 
-  const undoPlayer = useCallback((player: 'p1' | 'p2') => {
-    if (player === 'p1') {
-      if (historyP1.length === 0) return; // Prevent null pointer freeze
-      fireFeedback();
-      const previousState = historyP1[historyP1.length - 1];
-      setP1(previousState);
-      setHistoryP1(prev => prev.slice(0, -1));
-    } else {
-      if (historyP2.length === 0) return; // Prevent null pointer freeze
-      fireFeedback();
-      const previousState = historyP2[historyP2.length - 1];
-      setP2(previousState);
-      setHistoryP2(prev => prev.slice(0, -1));
-    }
-  }, [fireFeedback, historyP1, historyP2]);
+  const beep = useCallback((freq = 800, ms = 40, volume = 0.1) => {
+    try {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!audioCtxRef.current && Ctx) audioCtxRef.current = new Ctx();
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.4, ctx.currentTime + ms / 1000);
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + ms / 1000);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + ms / 1000);
+    } catch {}
+  }, []);
+
+  const fireFeedback = useCallback(() => {
+    if (!soundRef.current) return;
+    try { navigator.vibrate?.(12); } catch {}
+    beep();
+  }, [beep]);
+
+  useEffect(() => () => {
+    if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') audioCtxRef.current.close().catch(() => {});
+  }, []);
+
+  // Keep the screen awake during a match.
+  useEffect(() => {
+    let lock: ScreenLock | null = null;
+    const nav = navigator as unknown as WakeLockNav;
+    const request = async () => {
+      try { if (nav.wakeLock) lock = await nav.wakeLock.request('screen'); } catch {}
+    };
+    request();
+    const onVis = () => { if (document.visibilityState === 'visible') request(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      lock?.release().catch(() => {});
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
+
+  // Timer based on an end timestamp so it stays accurate when the tab is throttled.
+  useEffect(() => {
+    if (!running) { endsAtRef.current = null; return; }
+    endsAtRef.current = Date.now() + game.timeLeft * 1000;
+    const id = setInterval(() => {
+      const left = Math.max(0, Math.round(((endsAtRef.current ?? 0) - Date.now()) / 1000));
+      setGame((g) => (g.timeLeft === left ? g : { ...g, timeLeft: left }));
+      if (left === 0) {
+        setRunning(false);
+        try { navigator.vibrate?.([200, 100, 200, 100, 400]); } catch {}
+        if (soundRef.current) beep(660, 600, 0.25);
+      }
+    }, 250);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running]);
+
+  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+
+  const pulse = (player: PlayerId) => {
+    setAnim((a) => ({ ...a, [player]: true }));
+    setTimeout(() => setAnim((a) => ({ ...a, [player]: false })), 180);
+  };
+
+  /** Apply a change to one player, keep an undo snapshot and optionally log it. */
+  const update = useCallback((player: PlayerId, updates: Partial<PlayerState>, log?: Omit<LogEntry, 'turn'>) => {
+    fireFeedback();
+    setGame((g) => ({
+      ...g,
+      [player]: { ...g[player], ...updates },
+      history: { ...g.history, [player]: [...g.history[player], g[player]].slice(-HISTORY_LIMIT) },
+      log: log ? addLog(g.log, { ...log, turn: g.turn }) : g.log,
+      winnerDismissed: updates.prizes ? false : g.winnerDismissed,
+    }));
+  }, [fireFeedback]);
+
+  const setTarget = useCallback((player: PlayerId, target: Target) => {
+    fireFeedback();
+    setTargets((tg) => ({ ...tg, [player]: target }));
+  }, [fireFeedback]);
+
+  const adjust = useCallback((player: PlayerId, target: Target, amount: number) => {
+    const s = game[player];
+    const current = target < 0 ? s.hp : s.bench[target];
+    const next = Math.max(0, Math.min(990, current + amount));
+    if (next === current) return;
+    pulse(player);
+    const updates: Partial<PlayerState> = target < 0
+      ? { hp: next }
+      : { bench: s.bench.map((v, i) => (i === target ? next : v)) };
+    update(player, updates, { k: 'dmg', p: player, target, n: next - current });
+  }, [game, update]);
+
+  const knockOut = useCallback((player: PlayerId, target: Target) => {
+    const s = game[player];
+    const updates: Partial<PlayerState> = target < 0
+      ? { hp: 0, ...noConditions }
+      : { bench: s.bench.map((v, i) => (i === target ? 0 : v)) };
+    update(player, updates, { k: 'ko', p: player, target });
+    showToast(`${t(lang, 'ko')}! ${fmt(t(lang, 'koToast'), { p: nameOf(player === 'p1' ? 'p2' : 'p1') })}`);
+  }, [game, update, showToast, lang, nameOf]);
+
+  // Swap the Active Pokémon with a Benched one. Damage moves with each card;
+  // the Pokémon going to the Bench loses its Special Conditions.
+  const switchIn = useCallback((player: PlayerId, slot: number) => {
+    const s = game[player];
+    update(player, {
+      hp: s.bench[slot],
+      bench: s.bench.map((v, i) => (i === slot ? s.hp : v)),
+      ...noConditions,
+    }, { k: 'switch', p: player, target: slot });
+    setTargets((tg) => ({ ...tg, [player]: -1 }));
+    pulse(player);
+  }, [game, update]);
+
+  const toggleCondition = useCallback((player: PlayerId, c: Condition) => {
+    setGame((g) => {
+      const turningOn = !g[player][c];
+      const updates: Partial<PlayerState> = { [c]: turningOn };
+      if (turningOn && (ROTATION as readonly string[]).includes(c)) {
+        for (const r of ROTATION) if (r !== c) updates[r] = false;
+      }
+      return {
+        ...g,
+        [player]: { ...g[player], ...updates },
+        history: { ...g.history, [player]: [...g.history[player], g[player]].slice(-HISTORY_LIMIT) },
+        log: addLog(g.log, { turn: g.turn, k: 'cond', p: player, c, on: turningOn }),
+      };
+    });
+    fireFeedback();
+  }, [fireFeedback]);
+
+  const undo = useCallback((player: PlayerId) => {
+    setGame((g) => {
+      const h = g.history[player];
+      if (h.length === 0) return g;
+      return {
+        ...g,
+        [player]: h[h.length - 1],
+        history: { ...g.history, [player]: h.slice(0, -1) },
+        log: addLog(g.log, { turn: g.turn, k: 'undo', p: player }),
+      };
+    });
+    fireFeedback();
+  }, [fireFeedback]);
+
+  const logEvent = (e: Omit<LogEntry, 'turn'>) => setGame((g) => ({ ...g, log: addLog(g.log, { ...e, turn: g.turn }) }));
 
   const flipCoin = () => {
     if (isFlipping) return;
@@ -354,143 +620,395 @@ export default function PTCGCounter({ lang = 'en' }: { lang?: string }) {
     setIsFlipping(true);
     setCoinResult(null);
     setTimeout(() => {
-      setCoinResult(Math.random() > 0.5 ? 'HEADS' : 'TAILS');
+      const heads = randomBit();
+      setCoinResult(heads ? 'HEADS' : 'TAILS');
       setIsFlipping(false);
+      logEvent({ k: 'coin', n: 1, h: heads ? 1 : 0 });
       fireFeedback();
     }, 600);
   };
 
-  const handleNextTurn = () => {
+  const flipMany = (mode: 'count' | 'untilTails') => {
     fireFeedback();
-    setTurnCount(prev => prev + 1);
-    updatePlayer('p1', { abilityUsed: false, retreatUsed: false }, true);
-    updatePlayer('p2', { abilityUsed: false, retreatUsed: false }, true);
+    const results: boolean[] = [];
+    if (mode === 'count') for (let i = 0; i < coinCount; i++) results.push(randomBit());
+    else {
+      // Cap the run so a very long streak still ends.
+      for (let i = 0; i < 30; i++) { const h = randomBit(); results.push(h); if (!h) break; }
+    }
+    setCoinRun(results);
+    logEvent({ k: 'coin', n: results.length, h: results.filter(Boolean).length });
   };
 
+  const nextTurn = () => {
+    fireFeedback();
+    const reset = { abilityUsed: false, retreatUsed: false, energyUsed: false, supporterUsed: false };
+    setGame((g) => ({
+      ...g,
+      turn: g.turn + 1,
+      p1: { ...g.p1, ...reset },
+      p2: { ...g.p2, ...reset },
+      history: {
+        p1: [...g.history.p1, g.p1].slice(-HISTORY_LIMIT),
+        p2: [...g.history.p2, g.p2].slice(-HISTORY_LIMIT),
+      },
+      log: addLog(g.log, { turn: g.turn + 1, k: 'turn', n: g.turn + 1 }),
+    }));
+  };
+
+  // Pokémon Checkup: Poison adds 10, Burn adds 20, for both Active Pokémon.
+  const checkup = () => {
+    fireFeedback();
+    const parts: string[] = [];
+    const needsFlip = game.p1.asleep || game.p2.asleep || game.p1.burned || game.p2.burned;
+    const amounts = { p1: 0, p2: 0 };
+    (['p1', 'p2'] as const).forEach((p) => {
+      amounts[p] = (game[p].poisoned ? 10 : 0) + (game[p].burned ? 20 : 0);
+      if (amounts[p] > 0) { parts.push(`${nameOf(p)} +${amounts[p]}`); pulse(p); }
+    });
+    setGame((g) => {
+      let next = g;
+      (['p1', 'p2'] as const).forEach((p) => {
+        const dmg = (g[p].poisoned ? 10 : 0) + (g[p].burned ? 20 : 0);
+        if (dmg === 0) return;
+        next = {
+          ...next,
+          [p]: { ...next[p], hp: Math.min(990, next[p].hp + dmg) },
+          history: { ...next.history, [p]: [...next.history[p], g[p]].slice(-HISTORY_LIMIT) },
+          log: addLog(next.log, { turn: g.turn, k: 'checkup', p, n: dmg }),
+        };
+      });
+      return next;
+    });
+    const msg = parts.length ? `${t(lang, 'checkupApplied')}: ${parts.join(' · ')}` : t(lang, 'checkupNothing');
+    showToast(needsFlip ? `${msg} ${t(lang, 'checkupFlipReminder')}` : msg);
+  };
+
+  const resetBoard = () => {
+    setRunning(false);
+    setCoinResult(null);
+    setTargets({ p1: -1, p2: -1 });
+    setGame((g) => newGame(g.duration));
+  };
+
+  const startNewMatch = () => {
+    if (!window.confirm(t(lang, 'newMatchConfirm'))) return;
+    resetBoard();
+    setShowMenu(false);
+  };
+
+  const setDuration = (minutes: number) => {
+    setRunning(false);
+    setGame((g) => ({ ...g, duration: minutes * 60, timeLeft: minutes * 60 }));
+  };
+
+  const toggleSound = () => {
+    setSoundOn((s) => {
+      try { localStorage.setItem('ptcg_companion_sound', s ? 'off' : 'on'); } catch {}
+      return !s;
+    });
+  };
+
+  const winner: PlayerId | null = game.p1.prizes.every((p) => !p) ? 'p1' : game.p2.prizes.every((p) => !p) ? 'p2' : null;
+  const cjk = ['ja', 'zh-TW', 'zh-CN'].includes(lang);
+  const winnerText = winner ? `${nameOf(winner)}${cjk ? '' : ' '}${t(lang, 'wins')}` : '';
+  const timeUp = game.timeLeft === 0;
+  const gameNumber = series.p1 + series.p2 + 1;
+  const seriesText = `${nameOf('p1')} ${series.p1} – ${series.p2} ${nameOf('p2')}`;
+
+  const nextGame = () => {
+    if (!winner) return;
+    setSeries((s) => ({ ...s, [winner]: s[winner] + 1 }));
+    resetBoard();
+  };
+
+  const renderLog = (e: LogEntry) => {
+    const who = e.p ? nameOf(e.p) : '';
+    switch (e.k) {
+      case 'turn': return <span className="text-xs font-semibold text-muted">{t(lang, 'turn')} {e.n}</span>;
+      case 'dmg': return `${who} · ${targetLabel(e.target)} ${(e.n ?? 0) > 0 ? '+' : ''}${e.n}`;
+      case 'ko': return `${who} · ${targetLabel(e.target)} 💀 ${t(lang, 'ko')}`;
+      case 'switch': return `${who} · ${targetLabel(e.target)} ⇄ ${t(lang, 'active')}`;
+      case 'cond': return `${who} · ${t(lang, conditionKey[e.c as Condition] ?? '')} ${e.on ? 'ON' : 'OFF'}`;
+      case 'prize': return `${who} · ${fmt(t(lang, 'prizesLeft'), { n: e.n ?? 0 })}`;
+      case 'coin': return e.n === 1 ? `🪙 ${t(lang, e.h ? 'heads' : 'tails')}` : `🪙 ${fmt(t(lang, 'headsCount'), { h: e.h ?? 0, n: e.n ?? 0 })}`;
+      case 'checkup': return `✚ ${t(lang, 'checkup')} · ${who} +${e.n}`;
+      case 'win': return `🏆 ${who}`;
+      case 'undo': return `${who} · ↩ ${t(lang, 'undo')}`;
+    }
+  };
+
+  // Optional counter ad (off by default, see site.config.ts).
+  const adRef = useRef<HTMLModElement | null>(null);
+  useEffect(() => {
+    if (!ad || !adRef.current) return;
+    try { ((window as unknown as { adsbygoogle: unknown[] }).adsbygoogle ||= []).push({}); } catch {}
+  }, [ad]);
+
+  const pill = 'press h-9 rounded-full text-[11px] font-semibold';
+  const sheet = 'w-full max-w-sm bg-surface border border-line rounded-[28px] p-5 text-fg max-h-[85dvh] overflow-y-auto select-auto shadow-2xl';
+  const overlay = 'fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-3';
+  const sheetAnim = { animation: 'sheetIn 0.22s cubic-bezier(.2,.8,.2,1) forwards' };
+  const sectionTitle = 'text-xs font-semibold text-muted mb-2';
+  const row = 'press w-full h-12 rounded-2xl bg-surface-2 hover:bg-surface-3 font-medium text-sm flex items-center justify-between px-4';
+  const closeBtn = (onClose: () => void) => (
+    <button onClick={onClose} aria-label={t(lang, 'close')} className="press w-9 h-9 rounded-full bg-surface-2 text-muted hover:text-fg flex items-center justify-center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+    </button>
+  );
+
+  const areaProps = { lang, update, setTarget, adjust, knockOut, switchIn, toggleCondition, undo, onHint: showToast };
+
   return (
-    <div className="bg-black flex-1 w-full flex flex-col min-h-0 overflow-hidden max-w-md mx-auto justify-between font-sans select-none relative">
-      
-      {/* P2 Area */}
-      <PlayerArea state={p2} player="p2" historyLen={historyP2.length} isRotated={true} isAnim={p2Anim} lang={lang} updatePlayer={updatePlayer} undoPlayer={undoPlayer} />
+    <div className="bg-bg flex-1 w-full flex flex-col min-h-0 overflow-hidden max-w-md mx-auto select-none relative">
+      <PlayerArea {...areaProps} state={game.p2} player="p2" name={nameOf('p2')} target={targets.p2} historyLen={game.history.p2.length} isRotated isAnim={anim.p2} />
 
-      {/* Central Command Console */}
-      <div className="h-[120px] w-full flex flex-col justify-between items-center py-2 bg-neutral-950/90 backdrop-blur border-y border-neutral-900 shadow-2xl relative z-50">
-        
-        {/* Match Timer & Turn Info */}
-        <div className="flex items-center justify-between w-full px-2 h-[50px] gap-2">
-          
-          {/* Turn Engine */}
-          <div className="flex flex-col items-center justify-center flex-1 max-w-[130px] gap-1">
-            <button onClick={handleNextTurn} className="bg-neutral-800 border border-neutral-600 rounded px-3 py-1 text-white text-[9px] font-bold uppercase tracking-wider active:scale-95 w-full flex justify-between items-center transition-colors hover:bg-neutral-700">
-              <span>{t(lang, 'turn')} {turnCount}</span><span>➔</span>
-            </button>
-            <div className="flex w-full gap-1">
-              <button onClick={() => setFirstPlayer('p2')} className={`flex-1 rounded text-[7px] font-bold p-0.5 border transition-colors ${firstPlayer === 'p2' ? 'bg-amber-600 border-amber-400 text-white shadow-[0_0_10px_rgba(217,119,6,0.5)]' : 'bg-neutral-900 border-neutral-700 text-neutral-500'}`}>{t(lang, 'p2First')}</button>
-              <button onClick={() => setFirstPlayer('p1')} className={`flex-1 rounded text-[7px] font-bold p-0.5 border transition-colors ${firstPlayer === 'p1' ? 'bg-amber-600 border-amber-400 text-white shadow-[0_0_10px_rgba(217,119,6,0.5)]' : 'bg-neutral-900 border-neutral-700 text-neutral-500'}`}>{t(lang, 'p1First')}</button>
-            </div>
-          </div>
-
-          {/* Central Clock & Help */}
-          <div className="flex flex-col items-center justify-center flex-shrink-0 relative">
-            <span onClick={() => { fireFeedback(); setIsTimerRunning(!isTimerRunning); }} className="text-xl font-mono tracking-widest font-extrabold text-amber-400 cursor-pointer active:scale-95 transition-transform" style={{ textShadow: '0 0 10px rgba(251,191,36,0.3)' }}>
-              {formatTime(timeLeft)}
-            </span>
-            <button 
-              onClick={() => { fireFeedback(); setShowOnboarding(true); }}
-              className="mt-0.5 text-[8px] font-bold text-neutral-500 hover:text-neutral-300 tracking-wider uppercase transition-colors"
+      {/* Centre console */}
+      <div className="w-full shrink-0 flex flex-col gap-1.5 px-2 py-1 relative z-40">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <button onClick={nextTurn} className={`${pill} bg-surface border border-line text-fg px-3 flex justify-between items-center`}>
+            <span>{t(lang, 'turn')} <span className="tabular">{game.turn}</span></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </button>
+          <button
+            onClick={() => { fireFeedback(); if (!timeUp) setRunning((r) => !r); }}
+            aria-label={`${t(lang, 'timer')} ${formatTime(game.timeLeft)}`}
+            title={t(lang, 'timerHint')}
+            className={`press px-3 h-9 rounded-full flex items-center gap-1.5 text-2xl font-semibold tabular tracking-tight ${timeUp ? 'text-rose-500 animate-pulse' : running ? 'text-fg' : 'text-muted'}`}
+          >
+            <span className={`w-2 h-2 rounded-full ${timeUp ? 'bg-rose-500' : running ? 'bg-emerald-500 animate-pulse' : 'bg-faint'}`} aria-hidden="true" />
+            {timeUp ? t(lang, 'timeUp') : formatTime(game.timeLeft)}
+          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={flipCoin}
+              aria-live="polite"
+              className={`${pill} flex-1 border ${isFlipping ? 'border-line bg-surface text-muted animate-pulse' : coinResult === 'HEADS' ? 'border-sky-500/40 bg-sky-500/15 text-sky-600 dark:text-sky-300' : coinResult === 'TAILS' ? 'border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300' : 'border-line bg-surface text-fg'}`}
             >
-              ❓ Help / 幫助
-            </button>
-          </div>
-
-          {/* Coin Flipper */}
-          <div className="flex flex-col items-center justify-center flex-1 max-w-[130px]">
-            <button onClick={flipCoin} className={`w-full py-2 rounded font-black text-[9px] tracking-widest border-2 transition-all ${isFlipping ? 'scale-95 opacity-80 border-neutral-600 bg-neutral-800 animate-pulse text-neutral-400' : coinResult === 'HEADS' ? 'border-cyan-500 bg-cyan-950 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : coinResult === 'TAILS' ? 'border-fuchsia-500 bg-fuchsia-950 text-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.4)]' : 'border-neutral-700 bg-neutral-900 text-neutral-300'}`}>
               {isFlipping ? t(lang, 'flipping') : coinResult === 'HEADS' ? t(lang, 'heads') : coinResult === 'TAILS' ? t(lang, 'tails') : t(lang, 'flipCoin')}
             </button>
+            <button onClick={() => { fireFeedback(); setCoinRun(null); setCoinSheet(true); }} aria-label={t(lang, 'coinMore')} className={`${pill} w-9 border border-line bg-surface text-muted`}>×N</button>
           </div>
         </div>
-
-        {/* Strict AdSense Container (Solid rigid background) */}
-        <div 
-          className="bg-neutral-900 flex items-center justify-center rounded shrink-0 relative mt-1 mb-1"
-          style={{ minWidth: '320px', minHeight: '50px', width: '320px', height: '50px', overflow: 'hidden' }}
-        >
-          <span className="text-neutral-500 text-[10px] uppercase font-mono tracking-wider absolute">
-            Google AdSense Banner
-          </span>
+        <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
+          <div className="flex p-0.5 rounded-full bg-surface border border-line" role="group" aria-label="First player">
+            {(['p2', 'p1'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => { fireFeedback(); setGame((g) => ({ ...g, firstPlayer: p })); }}
+                aria-pressed={game.firstPlayer === p}
+                className={`press flex-1 h-7 rounded-full text-[10px] font-semibold ${game.firstPlayer === p ? 'bg-amber-500 text-white shadow-sm' : 'text-muted'}`}
+              >{t(lang, p === 'p1' ? 'p1First' : 'p2First')}</button>
+            ))}
+          </div>
+          <button onClick={checkup} className={`${pill} h-8 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1`}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            {t(lang, 'checkup')}
+          </button>
+          <button onClick={() => { fireFeedback(); setShowMenu(true); }} aria-label={t(lang, 'menu')} className={`${pill} h-8 w-10 bg-surface border border-line text-fg flex items-center justify-center`}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          </button>
         </div>
+        {ad && (
+          <div className="mt-1 flex flex-col items-center">
+            <span className="text-[9px] text-faint">{t(lang, 'adLabel')}</span>
+            <ins ref={adRef} className="adsbygoogle" style={{ display: 'inline-block', width: 320, height: 50 }} data-ad-client={ad.client} data-ad-slot={ad.slot} />
+          </div>
+        )}
       </div>
 
-      {/* P1 Area */}
-      <PlayerArea state={p1} player="p1" historyLen={historyP1.length} isRotated={false} isAnim={p1Anim} lang={lang} updatePlayer={updatePlayer} undoPlayer={undoPlayer} />
-      
-      {/* Smart Onboarding, Localization & Compliance Portal */}
-      {showOnboarding && (
-        <div className="fixed inset-0 z-[100] backdrop-blur-md bg-black/80 flex items-center justify-center p-4 animate-fade-in" style={{ animation: 'fadeIn 0.3s ease-out forwards' }}>
-          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl p-6 flex flex-col text-white max-h-[85vh] overflow-y-auto shadow-2xl relative select-auto">
-            {/* A. TITLE & VISUAL SETUP GUIDE */}
-            <h2 className="text-xl font-black mb-3 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">{t(lang, 'onboardTitle')}</h2>
-            <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50 mb-6">
-              <ul className="text-sm leading-relaxed text-neutral-200 list-disc pl-4 space-y-2">
-                <li><strong>{t(lang, 'onboardHpTitle')}</strong> {t(lang, 'onboardHpDesc')}</li>
-                <li><strong>{t(lang, 'onboardTurnTitle')}</strong> {t(lang, 'onboardTurnDesc')}</li>
-                <li><strong>{t(lang, 'onboardOriTitle')}</strong> {t(lang, 'onboardOriDesc')}</li>
-              </ul>
-            </div>
+      <PlayerArea {...areaProps} state={game.p1} player="p1" name={nameOf('p1')} target={targets.p1} historyLen={game.history.p1.length} isRotated={false} isAnim={anim.p1} />
 
-            {/* B. EXPRESS LANGUAGE INTERACTIVE PICKER */}
-            <div className="mb-6">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-3">{t(lang, 'onboardLangTitle')}</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {langs.map((l) => {
-                  const displayMap: Record<string, string> = {
-                    en: 'English', 'zh-TW': '繁中', 'zh-CN': '简中', ja: '日本語', fr: 'FR', de: 'DE', es: 'ES', pt: 'PT', ru: 'RU', hi: 'HI', bn: 'BN', ar: 'AR', ur: 'UR'
-                  };
-                  return (
-                    <a 
-                      key={l}
-                      href={l === 'en' ? '/' : `/${l}/`} 
-                      className={`px-2 py-2 border rounded-lg text-[11px] sm:text-xs text-center font-bold transition-all ${lang === l ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:text-white'}`}
-                    >
-                      {displayMap[l] || l}
-                    </a>
-                  )
-                })}
+      {toast && (
+        <div role="status" className="pointer-events-none fixed left-1/2 top-1/2 -mt-6 z-[90] max-w-[88vw] px-4 py-2.5 rounded-2xl bg-fg text-bg text-[13px] font-medium shadow-2xl text-center" style={{ animation: 'toastIn 0.2s ease-out forwards' }}>
+          {toast}
+        </div>
+      )}
+
+      {/* Winner */}
+      {winner && !game.winnerDismissed && (
+        <div className="fixed inset-0 z-[95] bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.3s ease-out forwards' }} role="dialog" aria-modal="true" aria-label={winnerText}>
+          <div className={`w-full max-w-sm bg-surface border border-line rounded-[28px] p-6 text-center shadow-2xl ${winner === 'p2' ? 'rotate-180' : ''}`} style={sheetAnim}>
+            <div className="mx-auto mb-3 w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center text-3xl shadow-lg" aria-hidden="true">🏆</div>
+            <h2 className="text-2xl font-bold tracking-tight mb-1">{winnerText}</h2>
+            <p className="text-muted text-sm">{fmt(t(lang, 'gameN'), { n: gameNumber })} · {t(lang, 'turn')} {game.turn}{game.timeLeft < game.duration ? ` · ${formatTime(game.duration - game.timeLeft)}` : ''}</p>
+            <div className="my-5 flex items-center justify-center gap-4">
+              <div className="flex-1 text-right text-sm font-medium truncate">{nameOf('p1')}</div>
+              <div className="px-4 py-2 rounded-2xl bg-surface-2 text-2xl font-bold tabular">{series.p1 + (winner === 'p1' ? 1 : 0)} – {series.p2 + (winner === 'p2' ? 1 : 0)}</div>
+              <div className="flex-1 text-left text-sm font-medium truncate">{nameOf('p2')}</div>
+            </div>
+            <button onClick={nextGame} className="press w-full mb-2 h-12 rounded-2xl bg-accent text-accent-fg font-semibold">{t(lang, 'nextGame')}</button>
+            <button onClick={() => setGame((g) => ({ ...g, winnerDismissed: true }))} className="press w-full h-11 rounded-2xl bg-surface-2 text-fg font-medium">{t(lang, 'close')}</button>
+            <div className="mt-5 pt-4 border-t border-line">
+              <p className="text-sm text-muted mb-3">{t(lang, 'supportCta')}</p>
+              <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className="press inline-flex items-center gap-2 px-4 h-10 rounded-full bg-pink-500/15 text-pink-600 dark:text-pink-300 text-sm font-semibold">
+                <span aria-hidden="true">♥</span>{t(lang, 'supportBtn')}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coin options */}
+      {coinSheet && (
+        <div className={overlay} onClick={() => setCoinSheet(false)} role="dialog" aria-modal="true" aria-label={t(lang, 'coinMore')}>
+          <div className={sheet} onClick={(e) => e.stopPropagation()} style={sheetAnim}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold tracking-tight">{t(lang, 'coinMore')}</h2>
+              {closeBtn(() => setCoinSheet(false))}
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <button onClick={() => setCoinCount((c) => Math.max(1, c - 1))} aria-label="−" className="press w-12 h-12 rounded-2xl bg-surface-2 text-xl font-semibold">−</button>
+              <button onClick={() => flipMany('count')} className="press flex-1 h-12 rounded-2xl bg-accent text-accent-fg font-semibold">{fmt(t(lang, 'flipN'), { n: coinCount })}</button>
+              <button onClick={() => setCoinCount((c) => Math.min(20, c + 1))} aria-label="+" className="press w-12 h-12 rounded-2xl bg-surface-2 text-xl font-semibold">+</button>
+            </div>
+            <button onClick={() => flipMany('untilTails')} className="press w-full h-12 rounded-2xl bg-surface-2 hover:bg-surface-3 font-semibold mb-4">{t(lang, 'flipUntilTails')}</button>
+            {coinRun && (
+              <div className="rounded-2xl bg-surface-2 p-4 text-center" aria-live="polite">
+                <p className="text-2xl font-bold tracking-tight mb-3">{fmt(t(lang, 'headsCount'), { h: coinRun.filter(Boolean).length, n: coinRun.length })}</p>
+                <div className="flex flex-wrap justify-center gap-1.5">
+                  {coinRun.map((h, i) => (
+                    <span key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold ${h ? 'bg-sky-500 text-white' : 'bg-surface-3 text-muted'}`} style={{ animation: `sheetIn 0.25s ${i * 0.04}s both` }}>
+                      {h ? t(lang, 'heads').slice(0, 1) : t(lang, 'tails').slice(0, 1)}
+                    </span>
+                  ))}
+                </div>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Match log */}
+      {showLog && (
+        <div className={overlay} onClick={() => setShowLog(false)} role="dialog" aria-modal="true" aria-label={t(lang, 'matchLog')}>
+          <div className={sheet} onClick={(e) => e.stopPropagation()} style={sheetAnim}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold tracking-tight">{t(lang, 'matchLog')}</h2>
+              {closeBtn(() => setShowLog(false))}
+            </div>
+            {game.log.length === 0 ? (
+              <p className="text-muted text-sm">{t(lang, 'logEmpty')}</p>
+            ) : (
+              <ol className="divide-y divide-line text-sm">
+                {[...game.log].reverse().map((e, i) => (
+                  <li key={game.log.length - i} className="py-2 tabular">{renderLog(e)}</li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Menu */}
+      {showMenu && (
+        <div className={overlay} onClick={() => setShowMenu(false)} role="dialog" aria-modal="true" aria-label={t(lang, 'menu')}>
+          <div className={sheet} onClick={(e) => e.stopPropagation()} style={sheetAnim}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold tracking-tight">{t(lang, 'menu')}</h2>
+              {closeBtn(() => setShowMenu(false))}
             </div>
 
-            {/* C. COMPLIANCE ACCORDION (PRIVACY POLICY & CONTACT) */}
-            <div className="mb-6 flex flex-col gap-2">
-              <details className="group border border-neutral-800 rounded-lg overflow-hidden">
-                <summary className="w-full px-4 py-3 bg-neutral-800/30 flex justify-between items-center text-sm font-bold cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                  <span>{t(lang, 'onboardPrivacy')}</span>
-                  <span className="text-neutral-500 group-open:hidden">+</span>
-                  <span className="text-neutral-500 hidden group-open:block">−</span>
-                </summary>
-                <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
-                  {t(lang, 'onboardPrivacyDesc')}
-                </div>
-              </details>
-
-              <details className="group border border-neutral-800 rounded-lg overflow-hidden">
-                <summary className="w-full px-4 py-3 bg-neutral-800/30 flex justify-between items-center text-sm font-bold cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                  <span>{t(lang, 'onboardContact')}</span>
-                  <span className="text-neutral-500 group-open:hidden">+</span>
-                  <span className="text-neutral-500 hidden group-open:block">−</span>
-                </summary>
-                <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
-                  {t(lang, 'onboardContactDesc1')}<br/>
-                  <a href="mailto:beyond01hk@gmail.com" className="text-blue-400 hover:underline">beyond01hk@gmail.com</a>
-                </div>
-              </details>
+            <h3 className={sectionTitle}>{t(lang, 'playerNames')}</h3>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              {(['p1', 'p2'] as const).map((p) => (
+                <input
+                  key={p}
+                  value={names[p]}
+                  maxLength={16}
+                  onChange={(e) => setNames((n) => ({ ...n, [p]: e.target.value }))}
+                  placeholder={t(lang, p === 'p1' ? 'player1' : 'player2')}
+                  aria-label={`${t(lang, 'playerNames')} ${p.toUpperCase()}`}
+                  className="h-11 px-3.5 rounded-2xl bg-surface-2 border border-transparent text-sm text-fg placeholder:text-faint focus:outline-none focus:border-accent"
+                />
+              ))}
+            </div>
+            <div className="flex items-center justify-between text-sm mb-6 px-1">
+              <span className="text-muted">{t(lang, 'series')} <strong className="text-fg tabular">{series.p1}–{series.p2}</strong> · {fmt(t(lang, 'gameN'), { n: gameNumber })}</span>
+              <button onClick={() => setSeries({ p1: 0, p2: 0 })} className="text-xs text-accent font-medium">{t(lang, 'resetSeries')}</button>
             </div>
 
-            {/* D. THE "LET'S BATTLE" CLOSING CTA */}
-            <button 
-              onClick={closeOnboarding} 
-              className="mt-auto w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black tracking-widest uppercase py-4 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)]"
-            >
+            <h3 className={sectionTitle}>{t(lang, 'timer')}</h3>
+            <div className="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-surface-2 mb-2">
+              {[25, 30, 50].map((m) => (
+                <button key={m} onClick={() => setDuration(m)} aria-pressed={game.duration === m * 60} className={`press h-9 rounded-xl text-sm font-semibold ${game.duration === m * 60 ? 'bg-surface text-fg shadow-sm' : 'text-muted'}`}>
+                  {m}<span className="text-[10px] font-normal ml-0.5">{t(lang, 'minutes')}</span>
+                </button>
+              ))}
+              <button onClick={() => setDuration(game.duration / 60)} aria-label={t(lang, 'timerReset')} className="press h-9 rounded-xl text-muted flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
+              </button>
+            </div>
+            <p className="text-xs text-faint mb-6 px-1">{t(lang, 'timerHint')}</p>
+
+            <h3 className={sectionTitle}>{t(lang, 'theme')}</h3>
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-surface-2 mb-6">
+              {(['system', 'light', 'dark'] as const).map((v) => (
+                <button key={v} onClick={() => chooseTheme(v)} aria-pressed={themePref === v} className={`press h-9 rounded-xl text-sm font-medium ${themePref === v ? 'bg-surface text-fg shadow-sm' : 'text-muted'}`}>
+                  {t(lang, v === 'system' ? 'themeSystem' : v === 'light' ? 'themeLight' : 'themeDark')}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-1.5 mb-6">
+              <button onClick={() => { setShowMenu(false); setShowLog(true); }} className={row}><span>{t(lang, 'matchLog')}</span><span className="text-faint tabular">{game.log.length}</span></button>
+              <button onClick={toggleSound} aria-pressed={soundOn} className={row}>
+                <span>{t(lang, 'soundOn')}</span>
+                <span className={`w-10 h-6 rounded-full p-0.5 transition-colors ${soundOn ? 'bg-emerald-500' : 'bg-surface-3'}`}><span className={`block w-5 h-5 rounded-full bg-white shadow transition-transform ${soundOn ? 'translate-x-4' : ''}`} /></span>
+              </button>
+              <button onClick={() => { setShowMenu(false); setShowOnboarding(true); }} className={row}><span>{t(lang, 'help')}</span><span className="text-faint">›</span></button>
+              <a href={localePath(cl, 'guides/')} className={row}><span>{t(lang, 'navGuides')}</span><span className="text-faint">›</span></a>
+              <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className={`${row} !bg-pink-500/12 text-pink-600 dark:text-pink-300`}><span>♥ {t(lang, 'navSupport')}</span><span>›</span></a>
+              <button onClick={startNewMatch} className={`${row} text-rose-600 dark:text-rose-400`}><span>{t(lang, 'newMatch')}</span></button>
+            </div>
+
+            <h3 className={sectionTitle}>{t(lang, 'onboardLangTitle')}</h3>
+            <div className="grid grid-cols-3 gap-1.5">
+              {langs.map((l) => (
+                <a key={l} href={localePath(l)} hrefLang={l} className={`press h-10 rounded-xl text-xs font-medium flex items-center justify-center ${lang === l ? 'bg-accent text-accent-fg' : 'bg-surface-2 text-fg hover:bg-surface-3'}`}>{langLabels[l]}</a>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding / help */}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.3s ease-out forwards' }} role="dialog" aria-modal="true" aria-label={t(lang, 'onboardTitle')}>
+          <div className="w-full max-w-sm bg-surface border border-line rounded-[28px] p-6 flex flex-col text-fg max-h-[85dvh] overflow-y-auto shadow-2xl relative select-auto" style={sheetAnim}>
+            <img src="/favicon.svg" alt="" width="44" height="44" className="rounded-xl mb-4" />
+            <h2 className="text-2xl font-bold tracking-tight mb-4">{t(lang, 'onboardTitle')}</h2>
+            <ul className="text-sm leading-relaxed text-muted space-y-3 mb-4">
+              <li><strong className="text-fg font-semibold">{t(lang, 'onboardHpTitle')}</strong> {t(lang, 'onboardHpDesc')}</li>
+              <li><strong className="text-fg font-semibold">A / B1–B5:</strong> {t(lang, 'active')} / {t(lang, 'bench')} · ⇅ {t(lang, 'switchToActive')}</li>
+              <li><strong className="text-fg font-semibold">{t(lang, 'onboardTurnTitle')}</strong> {t(lang, 'onboardTurnDesc')}</li>
+              <li><strong className="text-fg font-semibold">{t(lang, 'onboardOriTitle')}</strong> {t(lang, 'onboardOriDesc')}</li>
+              <li><strong className="text-fg font-semibold">{t(lang, 'checkup')}:</strong> {t(lang, 'checkupFlipReminder')}</li>
+            </ul>
+            <a href={localePath(cl, 'guides/how-to-use-ptcg-companion/')} className="text-sm text-accent font-medium mb-6">{t(lang, 'navGuides')} →</a>
+
+            <h3 className={sectionTitle}>{t(lang, 'onboardLangTitle')}</h3>
+            <div className="grid grid-cols-3 gap-1.5 mb-5">
+              {langs.map((l) => (
+                <a key={l} href={localePath(l)} hrefLang={l} className={`press h-10 rounded-xl text-xs font-medium flex items-center justify-center ${lang === l ? 'bg-accent text-accent-fg' : 'bg-surface-2 text-fg hover:bg-surface-3'}`}>{langLabels[l]}</a>
+              ))}
+            </div>
+
+            <details className="group rounded-2xl bg-surface-2 mb-2">
+              <summary className="px-4 h-12 flex justify-between items-center text-sm font-medium cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <span>{t(lang, 'onboardPrivacy')}</span>
+                <span className="text-faint transition-transform group-open:rotate-90">›</span>
+              </summary>
+              <div className="px-4 pb-4 text-xs text-muted leading-relaxed">
+                {t(lang, 'onboardPrivacyDesc')}{' '}
+                <a href={localePath(lang, 'privacy-policy/')} className="text-accent">{t(lang, 'privacyPolicy')} →</a>
+              </div>
+            </details>
+            <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className="press px-4 h-12 rounded-2xl bg-pink-500/12 text-sm font-medium text-pink-600 dark:text-pink-300 flex items-center justify-between mb-5">
+              <span>♥ {t(lang, 'navSupport')}</span><span aria-hidden="true">›</span>
+            </a>
+
+            <button onClick={closeOnboarding} className="press sticky bottom-0 mt-auto w-full h-14 rounded-2xl bg-accent text-accent-fg font-semibold text-base shadow-lg">
               {t(lang, 'onboardStartBtn')}
             </button>
           </div>

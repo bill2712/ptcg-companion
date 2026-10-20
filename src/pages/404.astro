@@ -2,16 +2,16 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="404 - Match State Lost">
-  <div class="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-    <div class="text-center">
-      <h1 class="text-8xl font-black text-red-600 mb-4 tracking-tighter" style="text-shadow: 0 0 30px rgba(220,38,38,0.6)">404</h1>
-      <h2 class="text-2xl font-bold text-neutral-300 mb-8 uppercase tracking-widest">Match State Lost</h2>
-      <p class="text-neutral-500 mb-10 max-w-md mx-auto">The requested page or route could not be found in our database. The battle may have ended, or the URL was invalid.</p>
-      
-      <a href="/zh-TW/" class="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black tracking-widest uppercase py-4 px-8 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)]">
-        Return to Card Table / 返回對戰桌
-      </a>
+<Layout title="404 - Page not found | PTCG Companion" noindex>
+  <main class="flex flex-col items-center justify-center text-center px-4 py-24 sm:py-32">
+    <p class="text-sm font-semibold text-accent mb-3">404</p>
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-fg mb-4">Page not found</h1>
+    <p class="text-muted mb-2">找不到頁面</p>
+    <p class="text-muted mb-10 max-w-md">The page you are looking for does not exist. It may have moved, or the link was mistyped.</p>
+    <div class="flex flex-col sm:flex-row gap-3">
+      <a href="/" class="inline-flex items-center justify-center h-12 px-6 rounded-full bg-accent text-accent-fg font-semibold">Match counter</a>
+      <a href="/en/guides/" class="inline-flex items-center justify-center h-12 px-6 rounded-full bg-surface border border-line text-fg font-medium">Guides</a>
+      <a href="/zh-TW/" class="inline-flex items-center justify-center h-12 px-6 rounded-full bg-surface border border-line text-fg font-medium">返回對戰桌</a>
     </div>
-  </div>
+  </main>
 </Layout>

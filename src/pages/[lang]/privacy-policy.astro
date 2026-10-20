@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { langs, t } from '../../locales/translations';
+import { siteConfig } from '../../site.config';
 
 export function getStaticPaths() {
   return langs.map(lang => ({ params: { lang } }));
@@ -10,29 +11,45 @@ const { lang } = Astro.params;
 const title = `${t(lang as string, 'privacyTitle')} - PTCG Companion`;
 ---
 
-<Layout title={title} lang={lang}>
-  <div class="min-h-screen bg-black text-neutral-300 py-12 px-6 pb-24">
-    <div class="max-w-3xl mx-auto bg-neutral-900 border border-neutral-800 p-8 rounded-2xl shadow-2xl">
-      <h1 class="text-3xl font-black text-white mb-6">{t(lang as string, 'privacyTitle')}</h1>
+<Layout title={title} lang={lang} suffix="privacy-policy/">
+  <main class="text-muted py-12 sm:py-16 px-4">
+    <div class="max-w-2xl mx-auto">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-fg mb-8">{t(lang as string, 'privacyTitle')}</h1>
       
-      <div class="space-y-6 text-sm leading-relaxed">
+      <div class="space-y-8 text-[15px] leading-relaxed">
         <section>
-          <h2 class="text-xl font-bold text-indigo-400 mb-2">{t(lang as string, 'privacyStorage')}</h2>
-          <p>{t(lang as string, 'privacyStorageDesc').split('localStorage')[0]}<code>localStorage</code>{t(lang as string, 'privacyStorageDesc').split('localStorage')[1]}</p>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'privacyStorage')}</h2>
+          <p>{t(lang as string, 'privacyStorageDesc').split('localStorage')[0]}<code class="px-1.5 py-0.5 rounded-md bg-surface-2 text-fg text-[13px]">localStorage</code>{t(lang as string, 'privacyStorageDesc').split('localStorage')[1]}</p>
         </section>
 
         <section>
-          <h2 class="text-xl font-bold text-indigo-400 mb-2">{t(lang as string, 'privacyAnalytics')}</h2>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'privacyAnalytics')}</h2>
           <p>{t(lang as string, 'privacyAnalyticsDesc')}</p>
         </section>
 
         <section>
-          <h2 class="text-xl font-bold text-indigo-400 mb-2">{t(lang as string, 'privacyAds')}</h2>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'privacyAds')}</h2>
           <p class="mb-4">{t(lang as string, 'privacyAdsDesc')}</p>
           <p class="mb-4">{t(lang as string, 'privacyAdsOptOut1')}</p>
-          <p>{t(lang as string, 'privacyAdsOptOut2').split('Google Ads Settings')[0] || t(lang as string, 'privacyAdsOptOut2').split('Google 廣告設定')[0]}<a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">Google Ads Settings</a>{t(lang as string, 'privacyAdsOptOut2').split('www.aboutads.info')[0].split(/Google Ads Settings|Google 廣告設定/)[1]}<a href="https://www.aboutads.info/" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">www.aboutads.info</a>{t(lang as string, 'privacyAdsOptOut2').split('www.aboutads.info')[1]}</p>
+          <p>{t(lang as string, 'privacyAdsOptOut2').split('Google Ads Settings')[0] || t(lang as string, 'privacyAdsOptOut2').split('Google 廣告設定')[0]}<a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">Google Ads Settings</a>{t(lang as string, 'privacyAdsOptOut2').split('www.aboutads.info')[0].split(/Google Ads Settings|Google 廣告設定/)[1]}<a href="https://www.aboutads.info/" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">www.aboutads.info</a>{t(lang as string, 'privacyAdsOptOut2').split('www.aboutads.info')[1]}</p>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'privacyConsent')}</h2>
+          <p>{t(lang as string, 'privacyConsentDesc')}</p>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'privacyDonations')}</h2>
+          <p>{t(lang as string, 'privacyDonationsDesc')}</p>
+        </section>
+
+        <section>
+          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'privacyContact')}</h2>
+          <p>{t(lang as string, 'privacyContactDesc')} <a href={`mailto:${siteConfig.contactEmail}`} class="text-accent hover:underline">{siteConfig.contactEmail}</a></p>
+          <p class="mt-4 text-xs text-faint">{t(lang as string, 'privacyUpdated')}: 2026-10-20</p>
         </section>
       </div>
     </div>
-  </div>
+  </main>
 </Layout>
