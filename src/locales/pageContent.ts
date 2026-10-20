@@ -5,6 +5,8 @@ export const pageContent = {
     guidesIntro:
       'Clear, practical explanations of the rules that come up in almost every Pokémon TCG game, written by players for players. Each guide also shows how to track the rule with PTCG Companion.',
     readGuide: 'Read guide',
+    minRead: 'min read',
+    guidesEyebrow: 'Rules made simple',
     updated: 'Last updated',
     moreGuides: 'More guides',
     allGuides: 'All guides',
@@ -59,6 +61,8 @@ export const pageContent = {
     guidesIntro:
       '由玩家為玩家撰寫，清楚實用咁解釋幾乎每場寶可夢卡牌對戰都會遇到嘅規則。每篇攻略亦會教你點樣用 PTCG Companion 記錄。',
     readGuide: '閱讀攻略',
+    minRead: '分鐘閱讀',
+    guidesEyebrow: '規則一看就明',
     updated: '最後更新',
     moreGuides: '更多攻略',
     allGuides: '全部攻略',

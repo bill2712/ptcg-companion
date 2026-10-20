@@ -14,14 +14,14 @@ const preview = !live && import.meta.env.DEV;
 ---
 
 {live && (
-  <aside class="my-10" aria-label={t(lang, 'adLabel')}>
-    <p class="text-[10px] uppercase tracking-widest text-neutral-600 mb-1 text-center">{t(lang, 'adLabel')}</p>
+  <aside class="my-12" aria-label={t(lang, 'adLabel')}>
+    <p class="text-[11px] text-faint mb-2 text-center">{t(lang, 'adLabel')}</p>
     <ins class="adsbygoogle block" style="display:block" data-ad-client={adsenseClient} data-ad-slot={slot} data-ad-format="auto" data-full-width-responsive="true"></ins>
     <script is:inline>(window.adsbygoogle = window.adsbygoogle || []).push({});</script>
   </aside>
 )}
 {preview && (
-  <div class="my-10 h-24 border border-dashed border-neutral-700 rounded-xl flex items-center justify-center text-xs text-neutral-600">
+  <div class="my-12 h-24 border border-dashed border-line-strong rounded-2xl flex items-center justify-center text-xs text-faint">
     Ad slot (set adsense.publisherId and slots.content in src/site.config.ts)
   </div>
 )}

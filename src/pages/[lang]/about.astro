@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import SupportCard from '../../components/SupportCard.astro';
-import { contentLangs, localePath, type ContentLang } from '../../locales/translations';
+import { contentLangs, localePath, t, type ContentLang } from '../../locales/translations';
 import { pageContent } from '../../locales/pageContent';
 import { siteConfig } from '../../site.config';
 
@@ -10,25 +10,39 @@ export function getStaticPaths() {
 }
 const lang = Astro.params.lang as ContentLang;
 const c = pageContent[lang];
+const icons = ['🎯', '🧪', '✚', '🃏', '⚡', '⭐', '🪙', '📜', '💾', '🌏', '📶'];
 ---
 
 <Layout title={`${c.aboutTitle}`} description={c.aboutBody[0]} lang={lang} suffix="about/" alternates={contentLangs}>
-  <main class="max-w-3xl mx-auto px-4 py-10">
-    <h1 class="text-3xl sm:text-4xl font-black text-white mb-6">{c.aboutTitle}</h1>
-    <div class="space-y-4 text-neutral-300 leading-relaxed">
-      {c.aboutBody.map((p) => <p>{p}</p>)}
+  <main class="max-w-3xl mx-auto px-4 pt-14 sm:pt-20">
+    <img src="/favicon.svg" alt="" width="64" height="64" class="rounded-2xl mb-8 shadow-lg" />
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-fg mb-8">{c.aboutTitle}</h1>
+    <div class="space-y-5 text-lg text-muted leading-relaxed">
+      {c.aboutBody.map((p, i) => <p class={i === 0 ? 'text-fg' : ''}>{p}</p>)}
     </div>
 
-    <h2 class="text-xl font-bold text-white mt-10 mb-3">{c.aboutFeaturesTitle}</h2>
-    <ul class="grid sm:grid-cols-2 gap-2 text-sm text-neutral-300">
-      {c.aboutFeatures.map((f) => <li class="flex gap-2"><span class="text-emerald-400" aria-hidden="true">✓</span>{f}</li>)}
+    <h2 class="text-2xl font-semibold tracking-tight text-fg mt-16 mb-6">{c.aboutFeaturesTitle}</h2>
+    <ul class="grid sm:grid-cols-2 gap-3">
+      {c.aboutFeatures.map((f, i) => (
+        <li class="flex items-start gap-3 p-4 rounded-2xl bg-surface border border-line">
+          <span class="w-9 h-9 rounded-xl bg-surface-2 flex items-center justify-center shrink-0" aria-hidden="true">{icons[i % icons.length]}</span>
+          <span class="text-sm text-fg leading-relaxed pt-1.5">{f}</span>
+        </li>
+      ))}
     </ul>
 
-    <h2 class="text-xl font-bold text-white mt-10 mb-3">{c.aboutFundingTitle}</h2>
-    <p class="text-neutral-300 leading-relaxed">{c.aboutFunding} <a href={localePath(lang, 'support/')} class="text-pink-300 hover:underline">♥</a></p>
-
-    <h2 class="text-xl font-bold text-white mt-10 mb-3">{c.aboutContactTitle}</h2>
-    <p class="text-neutral-300">{c.aboutContact} <a href={`mailto:${siteConfig.contactEmail}`} class="text-indigo-300 hover:underline">{siteConfig.contactEmail}</a></p>
+    <div class="grid sm:grid-cols-2 gap-4 mt-16">
+      <section class="p-6 rounded-3xl bg-surface border border-line">
+        <h2 class="text-lg font-semibold tracking-tight text-fg mb-2">{c.aboutFundingTitle}</h2>
+        <p class="text-sm text-muted leading-relaxed mb-4">{c.aboutFunding}</p>
+        <a href={localePath(lang, 'support/')} class="text-sm font-medium text-accent">{t(lang, 'navSupport')} →</a>
+      </section>
+      <section class="p-6 rounded-3xl bg-surface border border-line">
+        <h2 class="text-lg font-semibold tracking-tight text-fg mb-2">{c.aboutContactTitle}</h2>
+        <p class="text-sm text-muted leading-relaxed mb-4">{c.aboutContact}</p>
+        <a href={`mailto:${siteConfig.contactEmail}`} class="text-sm font-medium text-accent break-all">{siteConfig.contactEmail}</a>
+      </section>
+    </div>
 
     <SupportCard lang={lang} />
   </main>

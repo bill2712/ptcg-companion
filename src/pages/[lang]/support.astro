@@ -10,48 +10,60 @@ export function getStaticPaths() {
 const lang = Astro.params.lang as ContentLang;
 const c = pageContent[lang];
 const styles: Record<string, string> = {
-  kofi: 'bg-[#13C3FF] text-neutral-950 hover:brightness-110',
-  bmc: 'bg-[#FFDD00] text-neutral-950 hover:brightness-110',
-  paypal: 'bg-[#0070BA] text-white hover:brightness-110',
+  kofi: 'bg-[#13C3FF] text-neutral-950',
+  bmc: 'bg-[#FFDD00] text-neutral-950',
+  paypal: 'bg-[#0070BA] text-white',
 };
+const whatIcons = ['🌐', '✨', '📖', '🚫'];
 ---
 
 <Layout title={`${c.supportTitle}`} description={c.supportIntro} lang={lang} suffix="support/" alternates={contentLangs}>
-  <main class="max-w-2xl mx-auto px-4 py-10">
-    <div class="text-center">
-      <div class="text-5xl mb-4" aria-hidden="true">♥</div>
-      <h1 class="text-3xl sm:text-4xl font-black text-white mb-4">{c.supportTitle}</h1>
-      <p class="text-neutral-300 leading-relaxed">{c.supportIntro}</p>
-    </div>
-
-    <section class="mt-8 p-6 rounded-2xl bg-neutral-900 border border-neutral-800 text-center">
-      <h2 class="text-lg font-bold text-white mb-4">{c.supportButtons}</h2>
-      {donationLinks.length > 0 ? (
-        <div class="flex flex-col sm:flex-row justify-center gap-3">
-          {donationLinks.map((d) => (
-            <a href={d.url} target="_blank" rel="noopener" class={`px-6 py-3 rounded-xl font-black ${styles[d.id]}`}>{d.label}</a>
-          ))}
-        </div>
-      ) : (
-        <p class="text-neutral-400">{c.supportNone} <a href={`mailto:${siteConfig.contactEmail}`} class="text-indigo-300 hover:underline">{siteConfig.contactEmail}</a></p>
-      )}
+  <main class="max-w-3xl mx-auto px-4 pt-14 sm:pt-20">
+    <section class="relative overflow-hidden rounded-[32px] bg-surface border border-line px-6 py-12 sm:px-12 sm:py-16 text-center">
+      <div class="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-transparent to-violet-500/20 pointer-events-none" aria-hidden="true"></div>
+      <div class="relative">
+        <span class="inline-flex w-16 h-16 rounded-3xl bg-pink-500/15 text-pink-500 items-center justify-center text-3xl mb-6" aria-hidden="true">♥</span>
+        <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-fg mb-5">{c.supportTitle}</h1>
+        <p class="text-lg text-muted leading-relaxed max-w-xl mx-auto mb-8">{c.supportIntro}</p>
+        {donationLinks.length > 0 ? (
+          <div class="flex flex-col sm:flex-row justify-center gap-3">
+            {donationLinks.map((d) => (
+              <a href={d.url} target="_blank" rel="noopener" class={`inline-flex items-center justify-center gap-2 h-14 px-8 rounded-full font-semibold text-base shadow-lg hover:-translate-y-0.5 transition-transform ${styles[d.id]}`}>
+                {d.id === 'kofi' && <span aria-hidden="true">☕</span>}{c.supportButtons} · {d.label}
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p class="text-muted">{c.supportNone} <a href={`mailto:${siteConfig.contactEmail}`} class="text-accent">{siteConfig.contactEmail}</a></p>
+        )}
+      </div>
     </section>
 
-    <section class="mt-10">
-      <h2 class="text-xl font-bold text-white mb-3">{c.supportWhatTitle}</h2>
-      <ul class="space-y-2 text-neutral-300">
-        {c.supportWhat.map((w) => <li class="flex gap-2"><span class="text-pink-400" aria-hidden="true">•</span>{w}</li>)}
+    <section class="mt-14">
+      <h2 class="text-2xl font-semibold tracking-tight text-fg mb-6">{c.supportWhatTitle}</h2>
+      <ul class="grid sm:grid-cols-2 gap-3">
+        {c.supportWhat.map((w, i) => (
+          <li class="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-line">
+            <span class="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center shrink-0" aria-hidden="true">{whatIcons[i]}</span>
+            <span class="text-fg">{w}</span>
+          </li>
+        ))}
       </ul>
     </section>
 
-    <section class="mt-10">
-      <h2 class="text-xl font-bold text-white mb-3">{c.supportOtherTitle}</h2>
-      <ul class="space-y-2 text-neutral-300">
-        {c.supportOther.map((w) => <li class="flex gap-2"><span class="text-indigo-400" aria-hidden="true">•</span>{w}</li>)}
-      </ul>
-      <p class="mt-4 text-sm text-neutral-400"><a href={`mailto:${siteConfig.contactEmail}`} class="text-indigo-300 hover:underline">{siteConfig.contactEmail}</a></p>
+    <section class="mt-14">
+      <h2 class="text-2xl font-semibold tracking-tight text-fg mb-6">{c.supportOtherTitle}</h2>
+      <ol class="space-y-3">
+        {c.supportOther.map((w, i) => (
+          <li class="flex items-start gap-4">
+            <span class="w-7 h-7 rounded-full bg-accent-soft text-accent text-sm font-semibold flex items-center justify-center shrink-0">{i + 1}</span>
+            <span class="text-muted leading-relaxed pt-0.5">{w}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="mt-6 text-sm"><a href={`mailto:${siteConfig.contactEmail}`} class="text-accent font-medium">{siteConfig.contactEmail}</a></p>
     </section>
 
-    <p class="mt-12 text-center text-neutral-400">{c.supportThanks}</p>
+    <p class="mt-16 text-center text-lg text-fg font-medium">{c.supportThanks}</p>
   </main>
 </Layout>
