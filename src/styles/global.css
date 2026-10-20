@@ -1,14 +1,70 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
 @plugin "@tailwindcss/typography";
 
-@theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "Noto Sans JP", "PingFang TC", "Microsoft JhengHei", sans-serif;
+/* `dark:` follows the resolved theme on <html data-theme>, set before paint in Layout. */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* Design tokens. Components use bg-bg, bg-surface, text-fg, border-line, etc. */
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+}
+
+:root,
+:root[data-theme=dark] {
+  --bg: #09090b;
+  --surface: #131316;
+  --surface-2: #1c1c21;
+  --surface-3: #26262c;
+  --line: rgb(255 255 255 / 0.07);
+  --line-strong: rgb(255 255 255 / 0.14);
+  --fg: #f4f4f5;
+  --muted: #a1a1aa;
+  --faint: #63636e;
+  --accent: #8b7cff;
+  --accent-soft: rgb(139 124 255 / 0.16);
+  --accent-fg: #ffffff;
+  color-scheme: dark;
+}
+
+:root[data-theme=light] {
+  --bg: #f3f3f6;
+  --surface: #ffffff;
+  --surface-2: #f1f1f4;
+  --surface-3: #e6e6eb;
+  --line: rgb(9 9 11 / 0.08);
+  --line-strong: rgb(9 9 11 / 0.16);
+  --fg: #17171c;
+  --muted: #5f5f6b;
+  --faint: #9a9aa6;
+  --accent: #6d4aff;
+  --accent-soft: rgb(109 74 255 / 0.12);
+  --accent-fg: #ffffff;
+  color-scheme: light;
 }
 
 html {
-  background-color: #000;
-  color-scheme: dark;
+  background-color: var(--bg);
+  color: var(--fg);
   -webkit-text-size-adjust: 100%;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Full-screen counter: fixed to the visible viewport (dvh handles mobile URL bars). */
@@ -34,14 +90,32 @@ html {
   display: none;
 }
 
+/* Pressable surfaces: gentle press feedback without neon. */
+.press {
+  transition: transform 120ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+.press:active {
+  transform: scale(0.96);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes toastIn {
   from { opacity: 0; transform: translate(-50%, 8px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+@keyframes bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.bump { animation: bump 220ms ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

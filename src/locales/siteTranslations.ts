@@ -2,6 +2,10 @@
 // Languages missing a key fall back to English via t().
 export const siteDictionary: Record<string, Record<string, string>> = {
   en: {
+    theme: 'Appearance',
+    themeSystem: 'Auto',
+    themeLight: 'Light',
+    themeDark: 'Dark',
     active: 'Active',
     bench: 'Bench',
     switchToActive: 'Switch to Active',
@@ -62,6 +66,10 @@ export const siteDictionary: Record<string, Record<string, string>> = {
     soundOn: 'Sound & vibration',
   },
   'zh-TW': {
+    theme: '外觀',
+    themeSystem: '自動',
+    themeLight: '淺色',
+    themeDark: '深色',
     active: '戰鬥場',
     bench: '備戰',
     switchToActive: '換上戰鬥場',
@@ -122,6 +130,10 @@ export const siteDictionary: Record<string, Record<string, string>> = {
     soundOn: '音效與震動',
   },
   'zh-CN': {
+    theme: '外观',
+    themeSystem: '自动',
+    themeLight: '浅色',
+    themeDark: '深色',
     active: '战斗场',
     bench: '备战',
     switchToActive: '换上战斗场',
@@ -182,6 +194,10 @@ export const siteDictionary: Record<string, Record<string, string>> = {
     soundOn: '音效与震动',
   },
   ja: {
+    theme: '外観',
+    themeSystem: '自動',
+    themeLight: 'ライト',
+    themeDark: 'ダーク',
     active: 'バトル場',
     bench: 'ベンチ',
     switchToActive: 'バトル場へ',

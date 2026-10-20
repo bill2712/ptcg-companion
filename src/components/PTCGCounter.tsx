@@ -6,23 +6,14 @@ type PlayerId = 'p1' | 'p2';
 /** -1 = Active Pokémon, 0-4 = Bench slot. */
 type Target = number;
 
-const elementThemeMap: Record<ElementType, string> = {
-  None: 'border-neutral-800 shadow-none',
-  Grass: 'shadow-[inset_0_0_30px_rgba(34,197,94,0.15)] border-green-500',
-  Fire: 'shadow-[inset_0_0_30px_rgba(239,68,68,0.15)] border-red-500',
-  Water: 'shadow-[inset_0_0_30px_rgba(59,130,246,0.15)] border-blue-500',
-  Lightning: 'shadow-[inset_0_0_30px_rgba(234,179,8,0.15)] border-yellow-400',
-  Psychic: 'shadow-[inset_0_0_30px_rgba(168,85,247,0.15)] border-purple-500',
-  Fighting: 'shadow-[inset_0_0_30px_rgba(217,119,6,0.15)] border-amber-600',
-  Darkness: 'shadow-[inset_0_0_30px_rgba(31,41,55,0.4)] border-gray-600',
-  Metal: 'shadow-[inset_0_0_30px_rgba(156,163,175,0.15)] border-gray-400',
-  Dragon: 'shadow-[inset_0_0_30px_rgba(202,138,4,0.15)] border-yellow-600',
-  Colorless: 'shadow-[inset_0_0_30px_rgba(226,232,240,0.15)] border-slate-300',
-  Stellar: 'shadow-[inset_0_0_30px_rgba(99,102,241,0.15)] border-indigo-400',
+// Soft type tint for the player panel (hex, used at low opacity).
+const typeHex: Record<ElementType, string> = {
+  None: '', Grass: '#22c55e', Fire: '#ef4444', Water: '#3b82f6', Lightning: '#eab308', Psychic: '#a855f7',
+  Fighting: '#d97706', Darkness: '#64748b', Metal: '#94a3b8', Dragon: '#ca8a04', Colorless: '#cbd5e1', Stellar: '#6366f1',
 };
 
 const typeColors: Record<ElementType, string> = {
-  None: 'bg-neutral-800', Grass: 'bg-green-600', Fire: 'bg-red-600', Water: 'bg-blue-600',
+  None: 'bg-zinc-500', Grass: 'bg-green-600', Fire: 'bg-red-600', Water: 'bg-blue-600',
   Lightning: 'bg-yellow-400', Psychic: 'bg-purple-600', Fighting: 'bg-amber-700', Darkness: 'bg-gray-800',
   Metal: 'bg-gray-400', Dragon: 'bg-yellow-700', Colorless: 'bg-slate-300', Stellar: 'bg-indigo-500',
 };
@@ -171,8 +162,6 @@ const conditionKey: Record<Condition, string> = { poisoned: 'poison', burned: 'b
 interface ScreenLock { release(): Promise<void> }
 type WakeLockNav = { wakeLock?: { request(type: 'screen'): Promise<ScreenLock> } };
 
-const toggleBase = 'rounded-lg font-bold uppercase tracking-wide border transition-colors active:scale-95';
-
 interface PlayerAreaProps {
   state: PlayerState;
   player: PlayerId;
@@ -202,26 +191,24 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
   const dmg = target < 0 ? state.hp : state.bench[target];
   const targetLabel = target < 0 ? t(lang, 'active') : `${t(lang, 'bench')} ${target + 1}`;
 
-  let statusRing = '';
-  if (state.poisoned) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-green-500 shadow-[0_0_25px_rgba(34,197,94,0.6)]';
-  else if (state.burned) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-orange-500 shadow-[0_0_25px_rgba(249,115,22,0.6)]';
-  else if (state.paralyzed) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-yellow-500 shadow-[0_0_25px_rgba(234,179,8,0.6)]';
-  else if (state.asleep) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-blue-500 shadow-[0_0_25px_rgba(59,130,246,0.6)]';
-  else if (state.confused) statusRing = 'ring-4 ring-offset-2 ring-offset-black ring-purple-500 shadow-[0_0_25px_rgba(168,85,247,0.6)]';
+  // A Special Condition colours the panel outline so both players can see it.
+  const condBorder = state.poisoned ? 'border-green-500/70' : state.burned ? 'border-orange-500/70' : state.paralyzed ? 'border-yellow-500/70'
+    : state.asleep ? 'border-blue-500/70' : state.confused ? 'border-purple-500/70' : 'border-line';
+  const tint = typeHex[state.activeType];
 
-  const conditions: { key: Condition; on: string }[] = [
-    { key: 'poisoned', on: 'shadow-[0_0_15px_rgba(34,197,94,0.6)] border-green-400 bg-green-600 text-white' },
-    { key: 'burned', on: 'shadow-[0_0_15px_rgba(249,115,22,0.6)] border-orange-400 bg-orange-600 text-white' },
-    { key: 'asleep', on: 'shadow-[0_0_15px_rgba(59,130,246,0.6)] border-blue-400 bg-blue-600 text-white' },
-    { key: 'paralyzed', on: 'shadow-[0_0_15px_rgba(234,179,8,0.6)] border-yellow-400 bg-yellow-500 text-neutral-950' },
-    { key: 'confused', on: 'shadow-[0_0_15px_rgba(168,85,247,0.6)] border-purple-400 bg-purple-600 text-white' },
+  const conditions: { key: Condition; on: string; dot: string }[] = [
+    { key: 'poisoned', on: 'bg-green-500 text-white', dot: 'bg-green-500' },
+    { key: 'burned', on: 'bg-orange-500 text-white', dot: 'bg-orange-500' },
+    { key: 'asleep', on: 'bg-blue-500 text-white', dot: 'bg-blue-500' },
+    { key: 'paralyzed', on: 'bg-yellow-400 text-neutral-900', dot: 'bg-yellow-400' },
+    { key: 'confused', on: 'bg-purple-500 text-white', dot: 'bg-purple-500' },
   ];
 
-  const perTurn: { key: 'energyUsed' | 'supporterUsed' | 'retreatUsed' | 'abilityUsed'; label: string; idle: string }[] = [
-    { key: 'energyUsed', label: t(lang, 'energy'), idle: 'bg-amber-950 border-amber-800 text-amber-300' },
-    { key: 'supporterUsed', label: t(lang, 'supporter'), idle: 'bg-sky-950 border-sky-800 text-sky-300' },
-    { key: 'retreatUsed', label: t(lang, 'retreatUsed'), idle: 'bg-neutral-900 border-neutral-600 text-neutral-300' },
-    { key: 'abilityUsed', label: t(lang, 'ability'), idle: 'bg-rose-950 border-rose-800 text-rose-300' },
+  const perTurn: { key: 'energyUsed' | 'supporterUsed' | 'retreatUsed' | 'abilityUsed'; label: string; dot: string }[] = [
+    { key: 'energyUsed', label: t(lang, 'energy'), dot: 'bg-amber-400' },
+    { key: 'supporterUsed', label: t(lang, 'supporter'), dot: 'bg-sky-400' },
+    { key: 'retreatUsed', label: t(lang, 'retreatUsed'), dot: 'bg-zinc-400' },
+    { key: 'abilityUsed', label: t(lang, 'ability'), dot: 'bg-rose-400' },
   ];
 
   const slots: Target[] = [-1, 0, 1, 2, 3, 4];
@@ -229,7 +216,8 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
   return (
     <section
       aria-label={name}
-      className={`flex-1 min-h-0 overflow-y-auto hide-scrollbar flex flex-col justify-between gap-1 p-2 m-1 bg-gradient-to-b from-neutral-900 to-neutral-950 border-2 rounded-2xl relative transition-all duration-300 ${elementThemeMap[state.activeType]} ${statusRing} ${isRotated ? 'rotate-180' : ''}`}
+      className={`flex-1 min-h-0 overflow-y-auto hide-scrollbar flex flex-col gap-1 p-2 mx-1.5 my-1 bg-surface border-2 rounded-[22px] relative transition-colors duration-300 ${condBorder} ${isRotated ? 'rotate-180' : ''}`}
+      style={tint ? { backgroundImage: `linear-gradient(180deg, ${tint}22 0%, transparent 55%)` } : undefined}
     >
       {/* Active + Bench selector */}
       <div className="flex items-center gap-1 w-full">
@@ -244,10 +232,10 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
                 aria-checked={sel}
                 aria-label={`${s < 0 ? t(lang, 'active') : `${t(lang, 'bench')} ${s + 1}`}: ${d}`}
                 onClick={() => setTarget(player, s)}
-                className={`flex-1 h-[30px] rounded-md border flex flex-col items-center justify-center leading-none transition-all ${sel ? 'ring-2 ring-white border-white' : 'border-neutral-700'} ${s < 0 ? (d > 0 ? 'bg-red-900 text-red-100' : 'bg-red-950/70 text-red-300') : d > 0 ? 'bg-orange-900 text-orange-100' : 'bg-neutral-900 text-neutral-500'}`}
+                className={`press flex-1 h-[30px] rounded-[10px] flex flex-col items-center justify-center leading-none ${sel ? 'bg-accent text-accent-fg shadow-sm' : 'bg-surface-2 text-muted'} ${s < 0 && !sel ? 'ring-1 ring-inset ring-line-strong' : ''}`}
               >
-                <span className="text-[7px] font-bold uppercase opacity-70">{s < 0 ? 'A' : `B${s + 1}`}</span>
-                <span className="text-[11px] font-black font-mono">{d > 0 ? d : '–'}</span>
+                <span className={`text-[8px] font-semibold ${sel ? 'opacity-80' : 'opacity-60'}`}>{s < 0 ? 'A' : `B${s + 1}`}</span>
+                <span className={`text-[11px] font-bold tabular ${!sel && d > 0 ? 'text-rose-500 dark:text-rose-400' : ''}`}>{d > 0 ? d : '·'}</span>
               </button>
             );
           })}
@@ -256,25 +244,27 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
           onClick={() => (target < 0 ? onHint(t(lang, 'pickBenchFirst')) : switchIn(player, target))}
           aria-label={t(lang, 'switchToActive')}
           title={t(lang, 'switchToActive')}
-          className={`w-8 h-[30px] rounded-md border text-base font-black flex items-center justify-center active:scale-90 ${target < 0 ? 'border-neutral-800 text-neutral-600' : 'border-indigo-400 bg-indigo-900 text-white'}`}
-        >⇄</button>
+          className={`press w-8 h-[30px] rounded-[10px] flex items-center justify-center ${target < 0 ? 'bg-surface-2 text-faint' : 'bg-accent-soft text-accent'}`}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 4v16M7 4 3 8M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4" /></svg>
+        </button>
         <div className="relative">
           <button
             onClick={() => setTypeOpen((o) => !o)}
             aria-label={`${t(lang, 'type')}: ${state.activeType}`}
             aria-expanded={typeOpen}
-            className={`w-[30px] h-[30px] rounded-full border-2 border-neutral-600 text-[10px] font-black text-white flex items-center justify-center ${typeColors[state.activeType]}`}
-            style={state.activeType === 'None' ? { background: 'conic-gradient(#16a34a, #dc2626, #2563eb, #facc15, #9333ea, #b45309, #16a34a)' } : undefined}
+            className={`press w-[30px] h-[30px] rounded-full ring-2 ring-surface-3 text-[10px] font-bold text-white flex items-center justify-center ${typeColors[state.activeType]}`}
+            style={state.activeType === 'None' ? { background: 'conic-gradient(#22c55e, #ef4444, #3b82f6, #eab308, #a855f7, #d97706, #22c55e)' } : undefined}
           >{state.activeType === 'None' ? '' : typeInitials[state.activeType]}</button>
           {typeOpen && (
-            <div className="absolute right-0 top-9 z-30 p-2 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl grid grid-cols-4 gap-1.5 w-[148px]" role="group" aria-label={t(lang, 'type')}>
+            <div className="absolute right-0 top-9 z-30 p-2 rounded-2xl bg-surface border border-line-strong shadow-2xl grid grid-cols-4 gap-1.5 w-[152px]" style={{ animation: 'sheetIn 0.15s ease-out' }} role="group" aria-label={t(lang, 'type')}>
               {types.map((el) => (
                 <button
                   key={el}
                   onClick={() => { update(player, { activeType: el }); setTypeOpen(false); }}
                   aria-label={el}
                   aria-pressed={state.activeType === el}
-                  className={`w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-black text-white ${typeColors[el]} ${state.activeType === el ? 'ring-2 ring-white border-white' : 'border-neutral-900'}`}
+                  className={`press w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${typeColors[el]} ${state.activeType === el ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface' : ''}`}
                 >{typeInitials[el]}</button>
               ))}
             </div>
@@ -282,63 +272,71 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
         </div>
       </div>
 
-      {/* Damage + per-turn toggles */}
-      <div className="flex items-stretch justify-between w-full gap-2">
-        <div
-          className={`${target < 0 ? 'bg-red-950' : 'bg-orange-950'} border-4 rounded-xl w-36 h-16 shrink-0 flex items-center justify-center relative transition-all duration-200 ${dmg > 0 ? (target < 0 ? 'border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.6)]' : 'border-orange-400') : 'border-red-800 shadow-inner'} ${isAnim ? 'scale-105' : 'scale-100'}`}
-        >
-          <span className="absolute top-0.5 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wider text-red-200/70 whitespace-nowrap max-w-[130px] truncate">{name} · {targetLabel}</span>
-          <span aria-live="polite" aria-label={`${targetLabel}: ${dmg}`} className={`text-4xl font-black font-mono tracking-tighter mt-1.5 ${target < 0 ? 'text-red-500' : 'text-orange-400'}`} style={{ textShadow: '0 0 15px rgba(239,68,68,0.5)' }}>
-            {dmg}
-          </span>
+      {/* Damage readout + per-turn toggles */}
+      <div className="flex items-stretch justify-between w-full gap-1.5 flex-[1.4] min-h-16 max-h-36">
+        <div className="bg-surface-2 rounded-2xl w-[148px] shrink-0 flex flex-col items-center justify-center relative">
+          <span className="absolute top-1.5 left-0 right-0 text-center text-[9px] font-medium text-muted truncate px-8">{name} · {targetLabel}</span>
+          <span
+            key={isAnim ? 'a' : 'b'}
+            aria-live="polite"
+            aria-label={`${targetLabel}: ${dmg}`}
+            className={`text-[clamp(34px,7vh,52px)] leading-none font-semibold tabular tracking-tight mt-3 ${isAnim ? 'bump' : ''} ${dmg > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-faint'}`}
+          >{dmg}</span>
           <button
             onClick={() => undo(player)}
             disabled={historyLen === 0}
             aria-label={t(lang, 'undo')}
             title={t(lang, 'undo')}
-            className={`absolute left-0.5 bottom-0.5 w-7 h-7 rounded-md text-sm font-bold flex items-center justify-center ${historyLen > 0 ? 'text-blue-300 bg-blue-950/70 active:scale-90' : 'text-neutral-700 opacity-40'}`}
-          >↩</button>
+            className={`press absolute left-1 bottom-1 w-7 h-7 rounded-lg flex items-center justify-center ${historyLen > 0 ? 'text-fg hover:bg-surface-3' : 'text-faint opacity-40'}`}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>
+          </button>
           <button
             onClick={() => knockOut(player, target)}
             aria-label={`${t(lang, 'ko')}: ${targetLabel}`}
             title={t(lang, 'ko')}
-            className="absolute right-0.5 bottom-0.5 h-7 px-1 rounded-md text-[9px] font-black flex items-center justify-center text-neutral-200 bg-black/50 active:scale-90 hover:text-white"
+            className="press absolute right-1 bottom-1 h-7 px-1.5 rounded-lg text-[10px] font-semibold text-muted hover:text-fg hover:bg-surface-3"
           >{t(lang, 'ko')}</button>
         </div>
 
-        <div className="grid grid-cols-2 gap-1 flex-1 max-w-[170px]">
+        <div className="grid grid-cols-2 gap-1 flex-1 max-w-[180px]">
           {perTurn.map((p) => (
             <button
               key={p.key}
               onClick={() => update(player, { [p.key]: !state[p.key] })}
               aria-pressed={state[p.key]}
-              className={`${toggleBase} text-[9px] leading-tight px-0.5 ${state[p.key] ? 'bg-neutral-800 border-neutral-700 text-neutral-500 line-through' : p.idle}`}
-            >{p.label}</button>
+              className={`press rounded-xl text-[10px] font-medium leading-tight px-1.5 flex items-center justify-center gap-1 ${state[p.key] ? 'bg-transparent border border-dashed border-line-strong text-faint' : 'bg-surface-2 text-fg'}`}
+            >
+              {state[p.key]
+                ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0"><path d="M20 6 9 17l-5-5" /></svg>
+                : <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${p.dot}`} aria-hidden="true" />}
+              <span className={state[p.key] ? 'line-through' : ''}>{p.label}</span>
+            </button>
           ))}
         </div>
       </div>
 
       {/* Prize cards */}
-      <div className="grid grid-cols-6 gap-1 w-full" role="group" aria-label="Prize cards">
+      <div className="grid grid-cols-6 gap-1 w-full flex-[0.6] min-h-6 max-h-9" role="group" aria-label="Prize cards">
         {state.prizes.map((isActive, idx) => (
           <button
             key={idx}
             onClick={() => togglePrize(idx)}
             aria-pressed={!isActive}
             aria-label={`Prize ${idx + 1}`}
-            className={`h-6 rounded font-black text-xs transition-all border ${isActive ? 'bg-indigo-950 border-indigo-500 text-indigo-300' : 'bg-neutral-900 border-neutral-800 text-neutral-600 opacity-40 line-through'}`}
+            className={`press h-full min-h-6 rounded-md text-[11px] font-semibold tabular ${isActive ? 'bg-gradient-to-br from-violet-500 to-indigo-600 text-white/90 shadow-sm' : 'border border-dashed border-line-strong text-faint'}`}
           >{idx + 1}</button>
         ))}
       </div>
 
       {/* Damage keypad (applies to the selected Pokémon) */}
-      <div className="grid grid-cols-4 gap-2 w-full">
+      <div className="grid grid-cols-4 gap-1.5 w-full flex-1 min-h-10 max-h-[88px]">
         {[-10, 10, 50, 100].map((n) => (
           <button
             key={n}
             onClick={() => adjust(player, target, n)}
-            className={`h-10 rounded-xl font-black text-lg active:scale-95 border ${n < 0 ? 'bg-neutral-800 text-neutral-300 border-neutral-700' : 'bg-emerald-950 text-emerald-400 border-emerald-800'}`}
-          >{n > 0 ? `+${n}` : n}</button>
+            className={`press h-full rounded-2xl text-lg font-semibold tabular ${n < 0 ? 'bg-surface-2 text-muted' : 'bg-rose-500/12 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'}`}
+          >{n > 0 ? `+${n}` : `−${-n}`}</button>
         ))}
       </div>
 
@@ -349,23 +347,26 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
             key={c.key}
             onClick={() => toggleCondition(player, c.key)}
             aria-pressed={state[c.key]}
-            className={`${toggleBase} h-7 text-[9px] px-0.5 ${state[c.key] ? c.on : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}
-          >{t(lang, conditionKey[c.key])}</button>
+            className={`press h-[26px] rounded-full text-[10px] font-medium px-1 flex items-center justify-center gap-1 ${state[c.key] ? c.on : 'bg-surface-2 text-muted'}`}
+          >
+            {!state[c.key] && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} aria-hidden="true" />}
+            <span className="truncate">{t(lang, conditionKey[c.key])}</span>
+          </button>
         ))}
       </div>
 
       {/* Once-per-game markers */}
-      <div className="flex items-center gap-2 w-full">
+      <div className="grid grid-cols-3 gap-1 w-full">
         {([
-          ['vstarUsed', 'VSTAR', 'bg-gradient-to-br from-yellow-200 to-yellow-600 text-neutral-950 border-yellow-300 shadow-[0_0_10px_rgba(253,224,71,0.5)]'],
-          ['gxUsed', 'GX', 'bg-gradient-to-br from-cyan-400 to-blue-600 text-white border-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.5)]'],
-          ['aceSpecUsed', 'ACE SPEC', 'bg-gradient-to-br from-pink-400 to-fuchsia-600 text-white border-pink-300 shadow-[0_0_10px_rgba(236,72,153,0.5)]'],
-        ] as const).map(([key, text, on]) => (
+          ['vstarUsed', 'VSTAR', 'text-amber-500 dark:text-amber-300'],
+          ['gxUsed', 'GX', 'text-sky-500 dark:text-sky-300'],
+          ['aceSpecUsed', 'ACE SPEC', 'text-pink-500 dark:text-pink-300'],
+        ] as const).map(([key, text, color]) => (
           <button
             key={key}
             onClick={() => update(player, { [key]: !state[key] })}
             aria-pressed={state[key]}
-            className={`flex-1 h-7 rounded-lg font-black italic tracking-widest text-xs border-2 transition-all ${state[key] ? 'grayscale opacity-30 border-neutral-700 bg-neutral-800 text-neutral-500 line-through' : on}`}
+            className={`press h-[26px] rounded-full text-[11px] font-bold tracking-wide ${state[key] ? 'border border-dashed border-line-strong text-faint line-through' : `bg-surface-2 ${color}`}`}
           >{text}</button>
         ))}
       </div>
@@ -397,6 +398,7 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
   const [showMenu, setShowMenu] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [themePref, setThemePref] = useState<'system' | 'light' | 'dark'>('system');
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const soundRef = useRef(soundOn);
@@ -441,6 +443,16 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
       localStorage.setItem(SERIES_KEY, JSON.stringify(series));
     } catch {}
   }, [game, names, series, loaded]);
+
+  useEffect(() => {
+    const w = window as unknown as { __getThemePref?: () => 'system' | 'light' | 'dark' };
+    if (w.__getThemePref) setThemePref(w.__getThemePref());
+  }, []);
+
+  const chooseTheme = (v: 'system' | 'light' | 'dark') => {
+    (window as unknown as { __setTheme?: (v: string) => void }).__setTheme?.(v);
+    setThemePref(v);
+  };
 
   const closeOnboarding = () => {
     try { localStorage.setItem('ptcg_companion_onboarded', 'true'); } catch {}
@@ -713,7 +725,7 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
   const renderLog = (e: LogEntry) => {
     const who = e.p ? nameOf(e.p) : '';
     switch (e.k) {
-      case 'turn': return <span className="text-neutral-500">— {t(lang, 'turn')} {e.n} —</span>;
+      case 'turn': return <span className="text-xs font-semibold text-muted">{t(lang, 'turn')} {e.n}</span>;
       case 'dmg': return `${who} · ${targetLabel(e.target)} ${(e.n ?? 0) > 0 ? '+' : ''}${e.n}`;
       case 'ko': return `${who} · ${targetLabel(e.target)} 💀 ${t(lang, 'ko')}`;
       case 'switch': return `${who} · ${targetLabel(e.target)} ⇄ ${t(lang, 'active')}`;
@@ -733,62 +745,73 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
     try { ((window as unknown as { adsbygoogle: unknown[] }).adsbygoogle ||= []).push({}); } catch {}
   }, [ad]);
 
-  const consoleBtn = 'h-9 rounded-lg border text-[10px] font-bold uppercase tracking-wider active:scale-95 transition-colors';
-  const sheet = 'w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl p-5 text-white max-h-[85dvh] overflow-y-auto select-auto';
-  const overlay = 'fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-3';
+  const pill = 'press h-9 rounded-full text-[11px] font-semibold';
+  const sheet = 'w-full max-w-sm bg-surface border border-line rounded-[28px] p-5 text-fg max-h-[85dvh] overflow-y-auto select-auto shadow-2xl';
+  const overlay = 'fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-3';
+  const sheetAnim = { animation: 'sheetIn 0.22s cubic-bezier(.2,.8,.2,1) forwards' };
+  const sectionTitle = 'text-xs font-semibold text-muted mb-2';
+  const row = 'press w-full h-12 rounded-2xl bg-surface-2 hover:bg-surface-3 font-medium text-sm flex items-center justify-between px-4';
+  const closeBtn = (onClose: () => void) => (
+    <button onClick={onClose} aria-label={t(lang, 'close')} className="press w-9 h-9 rounded-full bg-surface-2 text-muted hover:text-fg flex items-center justify-center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+    </button>
+  );
 
   const areaProps = { lang, update, setTarget, adjust, knockOut, switchIn, toggleCondition, undo, onHint: showToast };
 
   return (
-    <div className="bg-black flex-1 w-full flex flex-col min-h-0 overflow-hidden max-w-md mx-auto font-sans select-none relative">
+    <div className="bg-bg flex-1 w-full flex flex-col min-h-0 overflow-hidden max-w-md mx-auto select-none relative">
       <PlayerArea {...areaProps} state={game.p2} player="p2" name={nameOf('p2')} target={targets.p2} historyLen={game.history.p2.length} isRotated isAnim={anim.p2} />
 
       {/* Centre console */}
-      <div className="w-full shrink-0 flex flex-col gap-1.5 px-2 py-1.5 bg-neutral-950/90 backdrop-blur border-y border-neutral-900 relative z-40">
+      <div className="w-full shrink-0 flex flex-col gap-1.5 px-2 py-1 relative z-40">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <button onClick={nextTurn} className={`${consoleBtn} bg-neutral-800 border-neutral-600 text-white px-3 flex justify-between items-center hover:bg-neutral-700`}>
-            <span>{t(lang, 'turn')} {game.turn}</span><span aria-hidden="true">➔</span>
+          <button onClick={nextTurn} className={`${pill} bg-surface border border-line text-fg px-3 flex justify-between items-center`}>
+            <span>{t(lang, 'turn')} <span className="tabular">{game.turn}</span></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </button>
           <button
             onClick={() => { fireFeedback(); if (!timeUp) setRunning((r) => !r); }}
             aria-label={`${t(lang, 'timer')} ${formatTime(game.timeLeft)}`}
             title={t(lang, 'timerHint')}
-            className={`px-2 text-2xl font-mono tracking-widest font-extrabold active:scale-95 transition-colors ${timeUp ? 'text-red-500 animate-pulse' : running ? 'text-amber-400' : 'text-amber-400/60'}`}
-            style={{ textShadow: running ? '0 0 10px rgba(251,191,36,0.35)' : undefined }}
+            className={`press px-3 h-9 rounded-full flex items-center gap-1.5 text-2xl font-semibold tabular tracking-tight ${timeUp ? 'text-rose-500 animate-pulse' : running ? 'text-fg' : 'text-muted'}`}
           >
+            <span className={`w-2 h-2 rounded-full ${timeUp ? 'bg-rose-500' : running ? 'bg-emerald-500 animate-pulse' : 'bg-faint'}`} aria-hidden="true" />
             {timeUp ? t(lang, 'timeUp') : formatTime(game.timeLeft)}
-            {!running && !timeUp && <span className="ml-1 text-xs align-middle" aria-hidden="true">▶</span>}
           </button>
           <div className="flex gap-1">
             <button
               onClick={flipCoin}
               aria-live="polite"
-              className={`${consoleBtn} flex-1 border-2 font-black ${isFlipping ? 'border-neutral-600 bg-neutral-800 animate-pulse text-neutral-400' : coinResult === 'HEADS' ? 'border-cyan-500 bg-cyan-950 text-cyan-300' : coinResult === 'TAILS' ? 'border-fuchsia-500 bg-fuchsia-950 text-fuchsia-300' : 'border-neutral-700 bg-neutral-900 text-neutral-300'}`}
+              className={`${pill} flex-1 border ${isFlipping ? 'border-line bg-surface text-muted animate-pulse' : coinResult === 'HEADS' ? 'border-sky-500/40 bg-sky-500/15 text-sky-600 dark:text-sky-300' : coinResult === 'TAILS' ? 'border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300' : 'border-line bg-surface text-fg'}`}
             >
               {isFlipping ? t(lang, 'flipping') : coinResult === 'HEADS' ? t(lang, 'heads') : coinResult === 'TAILS' ? t(lang, 'tails') : t(lang, 'flipCoin')}
             </button>
-            <button onClick={() => { fireFeedback(); setCoinRun(null); setCoinSheet(true); }} aria-label={t(lang, 'coinMore')} className={`${consoleBtn} w-7 border-neutral-700 bg-neutral-900 text-neutral-300`}>×N</button>
+            <button onClick={() => { fireFeedback(); setCoinRun(null); setCoinSheet(true); }} aria-label={t(lang, 'coinMore')} className={`${pill} w-9 border border-line bg-surface text-muted`}>×N</button>
           </div>
         </div>
         <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
-          <div className="flex gap-1" role="group" aria-label="First player">
+          <div className="flex p-0.5 rounded-full bg-surface border border-line" role="group" aria-label="First player">
             {(['p2', 'p1'] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => { fireFeedback(); setGame((g) => ({ ...g, firstPlayer: p })); }}
                 aria-pressed={game.firstPlayer === p}
-                className={`flex-1 h-8 rounded text-[9px] font-bold border transition-colors ${game.firstPlayer === p ? 'bg-amber-600 border-amber-400 text-white' : 'bg-neutral-900 border-neutral-700 text-neutral-400'}`}
+                className={`press flex-1 h-7 rounded-full text-[10px] font-semibold ${game.firstPlayer === p ? 'bg-amber-500 text-white shadow-sm' : 'text-muted'}`}
               >{t(lang, p === 'p1' ? 'p1First' : 'p2First')}</button>
             ))}
           </div>
-          <button onClick={checkup} className={`${consoleBtn} h-8 bg-emerald-950 border-emerald-700 text-emerald-300 hover:bg-emerald-900`}>
-            ✚ {t(lang, 'checkup')}
+          <button onClick={checkup} className={`${pill} h-8 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1`}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            {t(lang, 'checkup')}
           </button>
-          <button onClick={() => { fireFeedback(); setShowMenu(true); }} aria-label={t(lang, 'menu')} className={`${consoleBtn} h-8 px-3 bg-neutral-900 border-neutral-700 text-neutral-200 hover:bg-neutral-800`}>☰</button>
+          <button onClick={() => { fireFeedback(); setShowMenu(true); }} aria-label={t(lang, 'menu')} className={`${pill} h-8 w-10 bg-surface border border-line text-fg flex items-center justify-center`}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+          </button>
         </div>
         {ad && (
           <div className="mt-1 flex flex-col items-center">
-            <span className="text-[8px] uppercase tracking-widest text-neutral-600">{t(lang, 'adLabel')}</span>
+            <span className="text-[9px] text-faint">{t(lang, 'adLabel')}</span>
             <ins ref={adRef} className="adsbygoogle" style={{ display: 'inline-block', width: 320, height: 50 }} data-ad-client={ad.client} data-ad-slot={ad.slot} />
           </div>
         )}
@@ -797,24 +820,30 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
       <PlayerArea {...areaProps} state={game.p1} player="p1" name={nameOf('p1')} target={targets.p1} historyLen={game.history.p1.length} isRotated={false} isAnim={anim.p1} />
 
       {toast && (
-        <div role="status" className="pointer-events-none fixed left-1/2 top-1/2 -mt-6 z-[90] max-w-[90vw] px-4 py-2.5 rounded-xl bg-neutral-100 text-neutral-900 text-sm font-semibold shadow-2xl text-center" style={{ animation: 'toastIn 0.2s ease-out forwards' }}>
+        <div role="status" className="pointer-events-none fixed left-1/2 top-1/2 -mt-6 z-[90] max-w-[88vw] px-4 py-2.5 rounded-2xl bg-fg text-bg text-[13px] font-medium shadow-2xl text-center" style={{ animation: 'toastIn 0.2s ease-out forwards' }}>
           {toast}
         </div>
       )}
 
       {/* Winner */}
       {winner && !game.winnerDismissed && (
-        <div className="fixed inset-0 z-[95] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.3s ease-out forwards' }} role="dialog" aria-modal="true" aria-label={winnerText}>
-          <div className={`w-full max-w-sm bg-neutral-900 border border-amber-500/60 rounded-2xl p-6 text-center shadow-[0_0_40px_rgba(245,158,11,0.3)] ${winner === 'p2' ? 'rotate-180' : ''}`}>
-            <div className="text-5xl mb-2" aria-hidden="true">🏆</div>
-            <h2 className="text-3xl font-black text-amber-400 mb-1">{winnerText}</h2>
-            <p className="text-neutral-400 text-sm mb-1">{fmt(t(lang, 'gameN'), { n: gameNumber })} · {t(lang, 'turn')} {game.turn}{game.timeLeft < game.duration ? ` · ${formatTime(game.duration - game.timeLeft)}` : ''}</p>
-            <p className="text-neutral-300 text-sm font-bold mb-5">{t(lang, 'series')}: {nameOf('p1')} {series.p1 + (winner === 'p1' ? 1 : 0)} – {series.p2 + (winner === 'p2' ? 1 : 0)} {nameOf('p2')}</p>
-            <button onClick={nextGame} className="w-full mb-2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black text-white uppercase tracking-wider">{t(lang, 'nextGame')}</button>
-            <button onClick={() => setGame((g) => ({ ...g, winnerDismissed: true }))} className="w-full mb-5 py-2.5 rounded-xl border border-neutral-700 text-neutral-300 font-bold">{t(lang, 'close')}</button>
-            <div className="border-t border-neutral-800 pt-4">
-              <p className="text-sm text-neutral-300 mb-2">♥ {t(lang, 'supportCta')}</p>
-              <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className="inline-block px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-sm font-bold">{t(lang, 'supportBtn')}</a>
+        <div className="fixed inset-0 z-[95] bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.3s ease-out forwards' }} role="dialog" aria-modal="true" aria-label={winnerText}>
+          <div className={`w-full max-w-sm bg-surface border border-line rounded-[28px] p-6 text-center shadow-2xl ${winner === 'p2' ? 'rotate-180' : ''}`} style={sheetAnim}>
+            <div className="mx-auto mb-3 w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center text-3xl shadow-lg" aria-hidden="true">🏆</div>
+            <h2 className="text-2xl font-bold tracking-tight mb-1">{winnerText}</h2>
+            <p className="text-muted text-sm">{fmt(t(lang, 'gameN'), { n: gameNumber })} · {t(lang, 'turn')} {game.turn}{game.timeLeft < game.duration ? ` · ${formatTime(game.duration - game.timeLeft)}` : ''}</p>
+            <div className="my-5 flex items-center justify-center gap-4">
+              <div className="flex-1 text-right text-sm font-medium truncate">{nameOf('p1')}</div>
+              <div className="px-4 py-2 rounded-2xl bg-surface-2 text-2xl font-bold tabular">{series.p1 + (winner === 'p1' ? 1 : 0)} – {series.p2 + (winner === 'p2' ? 1 : 0)}</div>
+              <div className="flex-1 text-left text-sm font-medium truncate">{nameOf('p2')}</div>
+            </div>
+            <button onClick={nextGame} className="press w-full mb-2 h-12 rounded-2xl bg-accent text-accent-fg font-semibold">{t(lang, 'nextGame')}</button>
+            <button onClick={() => setGame((g) => ({ ...g, winnerDismissed: true }))} className="press w-full h-11 rounded-2xl bg-surface-2 text-fg font-medium">{t(lang, 'close')}</button>
+            <div className="mt-5 pt-4 border-t border-line">
+              <p className="text-sm text-muted mb-3">{t(lang, 'supportCta')}</p>
+              <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className="press inline-flex items-center gap-2 px-4 h-10 rounded-full bg-pink-500/15 text-pink-600 dark:text-pink-300 text-sm font-semibold">
+                <span aria-hidden="true">♥</span>{t(lang, 'supportBtn')}
+              </a>
             </div>
           </div>
         </div>
@@ -823,23 +852,23 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
       {/* Coin options */}
       {coinSheet && (
         <div className={overlay} onClick={() => setCoinSheet(false)} role="dialog" aria-modal="true" aria-label={t(lang, 'coinMore')}>
-          <div className={sheet} onClick={(e) => e.stopPropagation()} style={{ animation: 'fadeIn 0.2s ease-out forwards' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black">🪙 {t(lang, 'coinMore')}</h2>
-              <button onClick={() => setCoinSheet(false)} aria-label={t(lang, 'close')} className="w-9 h-9 rounded-full bg-neutral-800 text-neutral-300 hover:bg-neutral-700">✕</button>
+          <div className={sheet} onClick={(e) => e.stopPropagation()} style={sheetAnim}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold tracking-tight">{t(lang, 'coinMore')}</h2>
+              {closeBtn(() => setCoinSheet(false))}
             </div>
             <div className="flex items-center gap-2 mb-2">
-              <button onClick={() => setCoinCount((c) => Math.max(1, c - 1))} aria-label="−" className="w-10 h-11 rounded-lg bg-neutral-800 border border-neutral-700 text-xl font-black">−</button>
-              <button onClick={() => flipMany('count')} className="flex-1 h-11 rounded-lg bg-cyan-700 hover:bg-cyan-600 font-black">{fmt(t(lang, 'flipN'), { n: coinCount })}</button>
-              <button onClick={() => setCoinCount((c) => Math.min(20, c + 1))} aria-label="+" className="w-10 h-11 rounded-lg bg-neutral-800 border border-neutral-700 text-xl font-black">+</button>
+              <button onClick={() => setCoinCount((c) => Math.max(1, c - 1))} aria-label="−" className="press w-12 h-12 rounded-2xl bg-surface-2 text-xl font-semibold">−</button>
+              <button onClick={() => flipMany('count')} className="press flex-1 h-12 rounded-2xl bg-accent text-accent-fg font-semibold">{fmt(t(lang, 'flipN'), { n: coinCount })}</button>
+              <button onClick={() => setCoinCount((c) => Math.min(20, c + 1))} aria-label="+" className="press w-12 h-12 rounded-2xl bg-surface-2 text-xl font-semibold">+</button>
             </div>
-            <button onClick={() => flipMany('untilTails')} className="w-full h-11 rounded-lg bg-fuchsia-800 hover:bg-fuchsia-700 font-black mb-4">{t(lang, 'flipUntilTails')}</button>
+            <button onClick={() => flipMany('untilTails')} className="press w-full h-12 rounded-2xl bg-surface-2 hover:bg-surface-3 font-semibold mb-4">{t(lang, 'flipUntilTails')}</button>
             {coinRun && (
-              <div className="rounded-xl bg-neutral-950 border border-neutral-800 p-4 text-center" aria-live="polite">
-                <p className="text-2xl font-black text-white mb-3">{fmt(t(lang, 'headsCount'), { h: coinRun.filter(Boolean).length, n: coinRun.length })}</p>
+              <div className="rounded-2xl bg-surface-2 p-4 text-center" aria-live="polite">
+                <p className="text-2xl font-bold tracking-tight mb-3">{fmt(t(lang, 'headsCount'), { h: coinRun.filter(Boolean).length, n: coinRun.length })}</p>
                 <div className="flex flex-wrap justify-center gap-1.5">
                   {coinRun.map((h, i) => (
-                    <span key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black border-2 ${h ? 'bg-cyan-950 border-cyan-400 text-cyan-300' : 'bg-fuchsia-950 border-fuchsia-400 text-fuchsia-300'}`}>
+                    <span key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold ${h ? 'bg-sky-500 text-white' : 'bg-surface-3 text-muted'}`} style={{ animation: `sheetIn 0.25s ${i * 0.04}s both` }}>
                       {h ? t(lang, 'heads').slice(0, 1) : t(lang, 'tails').slice(0, 1)}
                     </span>
                   ))}
@@ -853,17 +882,17 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
       {/* Match log */}
       {showLog && (
         <div className={overlay} onClick={() => setShowLog(false)} role="dialog" aria-modal="true" aria-label={t(lang, 'matchLog')}>
-          <div className={sheet} onClick={(e) => e.stopPropagation()} style={{ animation: 'fadeIn 0.2s ease-out forwards' }}>
+          <div className={sheet} onClick={(e) => e.stopPropagation()} style={sheetAnim}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black">📜 {t(lang, 'matchLog')}</h2>
-              <button onClick={() => setShowLog(false)} aria-label={t(lang, 'close')} className="w-9 h-9 rounded-full bg-neutral-800 text-neutral-300 hover:bg-neutral-700">✕</button>
+              <h2 className="text-lg font-bold tracking-tight">{t(lang, 'matchLog')}</h2>
+              {closeBtn(() => setShowLog(false))}
             </div>
             {game.log.length === 0 ? (
-              <p className="text-neutral-500 text-sm">{t(lang, 'logEmpty')}</p>
+              <p className="text-muted text-sm">{t(lang, 'logEmpty')}</p>
             ) : (
-              <ol className="space-y-1.5 text-sm font-mono">
+              <ol className="divide-y divide-line text-sm">
                 {[...game.log].reverse().map((e, i) => (
-                  <li key={game.log.length - i} className="text-neutral-200">{renderLog(e)}</li>
+                  <li key={game.log.length - i} className="py-2 tabular">{renderLog(e)}</li>
                 ))}
               </ol>
             )}
@@ -874,13 +903,13 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
       {/* Menu */}
       {showMenu && (
         <div className={overlay} onClick={() => setShowMenu(false)} role="dialog" aria-modal="true" aria-label={t(lang, 'menu')}>
-          <div className={sheet} onClick={(e) => e.stopPropagation()} style={{ animation: 'fadeIn 0.2s ease-out forwards' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black">{t(lang, 'menu')}</h2>
-              <button onClick={() => setShowMenu(false)} aria-label={t(lang, 'close')} className="w-9 h-9 rounded-full bg-neutral-800 text-neutral-300 hover:bg-neutral-700">✕</button>
+          <div className={sheet} onClick={(e) => e.stopPropagation()} style={sheetAnim}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold tracking-tight">{t(lang, 'menu')}</h2>
+              {closeBtn(() => setShowMenu(false))}
             </div>
 
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-neutral-400 mb-2">{t(lang, 'playerNames')}</h3>
+            <h3 className={sectionTitle}>{t(lang, 'playerNames')}</h3>
             <div className="grid grid-cols-2 gap-2 mb-2">
               {(['p1', 'p2'] as const).map((p) => (
                 <input
@@ -890,41 +919,53 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
                   onChange={(e) => setNames((n) => ({ ...n, [p]: e.target.value }))}
                   placeholder={t(lang, p === 'p1' ? 'player1' : 'player2')}
                   aria-label={`${t(lang, 'playerNames')} ${p.toUpperCase()}`}
-                  className="h-10 px-3 rounded-lg bg-neutral-800 border border-neutral-700 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-indigo-500"
+                  className="h-11 px-3.5 rounded-2xl bg-surface-2 border border-transparent text-sm text-fg placeholder:text-faint focus:outline-none focus:border-accent"
                 />
               ))}
             </div>
-            <div className="flex items-center justify-between text-sm mb-5">
-              <span className="text-neutral-300">{t(lang, 'series')}: <strong>{seriesText}</strong> · {fmt(t(lang, 'gameN'), { n: gameNumber })}</span>
-              <button onClick={() => setSeries({ p1: 0, p2: 0 })} className="text-xs text-neutral-400 underline">{t(lang, 'resetSeries')}</button>
+            <div className="flex items-center justify-between text-sm mb-6 px-1">
+              <span className="text-muted">{t(lang, 'series')} <strong className="text-fg tabular">{series.p1}–{series.p2}</strong> · {fmt(t(lang, 'gameN'), { n: gameNumber })}</span>
+              <button onClick={() => setSeries({ p1: 0, p2: 0 })} className="text-xs text-accent font-medium">{t(lang, 'resetSeries')}</button>
             </div>
 
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-neutral-400 mb-2">{t(lang, 'timer')}</h3>
-            <div className="grid grid-cols-4 gap-2 mb-2">
+            <h3 className={sectionTitle}>{t(lang, 'timer')}</h3>
+            <div className="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-surface-2 mb-2">
               {[25, 30, 50].map((m) => (
-                <button key={m} onClick={() => setDuration(m)} aria-pressed={game.duration === m * 60} className={`py-2 rounded-lg border text-sm font-bold ${game.duration === m * 60 ? 'bg-amber-600 border-amber-400' : 'bg-neutral-800 border-neutral-700 hover:bg-neutral-700'}`}>
-                  {m} <span className="text-[10px] font-normal">{t(lang, 'minutes')}</span>
+                <button key={m} onClick={() => setDuration(m)} aria-pressed={game.duration === m * 60} className={`press h-9 rounded-xl text-sm font-semibold ${game.duration === m * 60 ? 'bg-surface text-fg shadow-sm' : 'text-muted'}`}>
+                  {m}<span className="text-[10px] font-normal ml-0.5">{t(lang, 'minutes')}</span>
                 </button>
               ))}
-              <button onClick={() => setDuration(game.duration / 60)} aria-label={t(lang, 'timerReset')} className="py-2 rounded-lg border bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-xs font-bold">↺</button>
-            </div>
-            <p className="text-xs text-neutral-500 mb-5">{t(lang, 'timerHint')}</p>
-
-            <div className="flex flex-col gap-2 mb-5">
-              <button onClick={() => { setShowMenu(false); setShowLog(true); }} className="w-full py-3 rounded-xl bg-neutral-800 border border-neutral-700 font-bold">📜 {t(lang, 'matchLog')}</button>
-              <button onClick={startNewMatch} className="w-full py-3 rounded-xl bg-red-950 border border-red-800 text-red-200 font-bold hover:bg-red-900">{t(lang, 'newMatch')}</button>
-              <button onClick={toggleSound} aria-pressed={soundOn} className="w-full py-3 rounded-xl bg-neutral-800 border border-neutral-700 font-bold flex justify-between px-4">
-                <span>{t(lang, 'soundOn')}</span><span>{soundOn ? 'ON' : 'OFF'}</span>
+              <button onClick={() => setDuration(game.duration / 60)} aria-label={t(lang, 'timerReset')} className="press h-9 rounded-xl text-muted flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
               </button>
-              <button onClick={() => { setShowMenu(false); setShowOnboarding(true); }} className="w-full py-3 rounded-xl bg-neutral-800 border border-neutral-700 font-bold">❓ {t(lang, 'help')}</button>
-              <a href={localePath(cl, 'guides/')} className="w-full py-3 rounded-xl bg-neutral-800 border border-neutral-700 font-bold text-center">📖 {t(lang, 'navGuides')}</a>
-              <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className="w-full py-3 rounded-xl bg-pink-700 hover:bg-pink-600 font-bold text-center">♥ {t(lang, 'navSupport')}</a>
+            </div>
+            <p className="text-xs text-faint mb-6 px-1">{t(lang, 'timerHint')}</p>
+
+            <h3 className={sectionTitle}>{t(lang, 'theme')}</h3>
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-surface-2 mb-6">
+              {(['system', 'light', 'dark'] as const).map((v) => (
+                <button key={v} onClick={() => chooseTheme(v)} aria-pressed={themePref === v} className={`press h-9 rounded-xl text-sm font-medium ${themePref === v ? 'bg-surface text-fg shadow-sm' : 'text-muted'}`}>
+                  {t(lang, v === 'system' ? 'themeSystem' : v === 'light' ? 'themeLight' : 'themeDark')}
+                </button>
+              ))}
             </div>
 
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-neutral-400 mb-2">{t(lang, 'onboardLangTitle')}</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col gap-1.5 mb-6">
+              <button onClick={() => { setShowMenu(false); setShowLog(true); }} className={row}><span>{t(lang, 'matchLog')}</span><span className="text-faint tabular">{game.log.length}</span></button>
+              <button onClick={toggleSound} aria-pressed={soundOn} className={row}>
+                <span>{t(lang, 'soundOn')}</span>
+                <span className={`w-10 h-6 rounded-full p-0.5 transition-colors ${soundOn ? 'bg-emerald-500' : 'bg-surface-3'}`}><span className={`block w-5 h-5 rounded-full bg-white shadow transition-transform ${soundOn ? 'translate-x-4' : ''}`} /></span>
+              </button>
+              <button onClick={() => { setShowMenu(false); setShowOnboarding(true); }} className={row}><span>{t(lang, 'help')}</span><span className="text-faint">›</span></button>
+              <a href={localePath(cl, 'guides/')} className={row}><span>{t(lang, 'navGuides')}</span><span className="text-faint">›</span></a>
+              <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className={`${row} !bg-pink-500/12 text-pink-600 dark:text-pink-300`}><span>♥ {t(lang, 'navSupport')}</span><span>›</span></a>
+              <button onClick={startNewMatch} className={`${row} text-rose-600 dark:text-rose-400`}><span>{t(lang, 'newMatch')}</span></button>
+            </div>
+
+            <h3 className={sectionTitle}>{t(lang, 'onboardLangTitle')}</h3>
+            <div className="grid grid-cols-3 gap-1.5">
               {langs.map((l) => (
-                <a key={l} href={localePath(l)} hrefLang={l} className={`px-2 py-2 border rounded-lg text-xs text-center font-bold ${lang === l ? 'bg-indigo-600 border-indigo-500' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700'}`}>{langLabels[l]}</a>
+                <a key={l} href={localePath(l)} hrefLang={l} className={`press h-10 rounded-xl text-xs font-medium flex items-center justify-center ${lang === l ? 'bg-accent text-accent-fg' : 'bg-surface-2 text-fg hover:bg-surface-3'}`}>{langLabels[l]}</a>
               ))}
             </div>
           </div>
@@ -933,47 +974,41 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
 
       {/* Onboarding / help */}
       {showOnboarding && (
-        <div className="fixed inset-0 z-[100] backdrop-blur-md bg-black/80 flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.3s ease-out forwards' }} role="dialog" aria-modal="true" aria-label={t(lang, 'onboardTitle')}>
-          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl p-6 flex flex-col text-white max-h-[85dvh] overflow-y-auto shadow-2xl relative select-auto">
-            <h2 className="text-xl font-black mb-3 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">{t(lang, 'onboardTitle')}</h2>
-            <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50 mb-4">
-              <ul className="text-sm leading-relaxed text-neutral-200 list-disc pl-4 space-y-2">
-                <li><strong>{t(lang, 'onboardHpTitle')}</strong> {t(lang, 'onboardHpDesc')}</li>
-                <li><strong>A / B1–B5:</strong> {t(lang, 'active')} / {t(lang, 'bench')} · ⇄ {t(lang, 'switchToActive')}</li>
-                <li><strong>{t(lang, 'onboardTurnTitle')}</strong> {t(lang, 'onboardTurnDesc')}</li>
-                <li><strong>{t(lang, 'onboardOriTitle')}</strong> {t(lang, 'onboardOriDesc')}</li>
-                <li><strong>✚ {t(lang, 'checkup')}:</strong> {t(lang, 'checkupFlipReminder')}</li>
-              </ul>
-              <a href={localePath(cl, 'guides/how-to-use-ptcg-companion/')} className="inline-block mt-3 text-sm text-indigo-300 hover:underline">📖 {t(lang, 'navGuides')} →</a>
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.3s ease-out forwards' }} role="dialog" aria-modal="true" aria-label={t(lang, 'onboardTitle')}>
+          <div className="w-full max-w-sm bg-surface border border-line rounded-[28px] p-6 flex flex-col text-fg max-h-[85dvh] overflow-y-auto shadow-2xl relative select-auto" style={sheetAnim}>
+            <img src="/favicon.svg" alt="" width="44" height="44" className="rounded-xl mb-4" />
+            <h2 className="text-2xl font-bold tracking-tight mb-4">{t(lang, 'onboardTitle')}</h2>
+            <ul className="text-sm leading-relaxed text-muted space-y-3 mb-4">
+              <li><strong className="text-fg font-semibold">{t(lang, 'onboardHpTitle')}</strong> {t(lang, 'onboardHpDesc')}</li>
+              <li><strong className="text-fg font-semibold">A / B1–B5:</strong> {t(lang, 'active')} / {t(lang, 'bench')} · ⇅ {t(lang, 'switchToActive')}</li>
+              <li><strong className="text-fg font-semibold">{t(lang, 'onboardTurnTitle')}</strong> {t(lang, 'onboardTurnDesc')}</li>
+              <li><strong className="text-fg font-semibold">{t(lang, 'onboardOriTitle')}</strong> {t(lang, 'onboardOriDesc')}</li>
+              <li><strong className="text-fg font-semibold">{t(lang, 'checkup')}:</strong> {t(lang, 'checkupFlipReminder')}</li>
+            </ul>
+            <a href={localePath(cl, 'guides/how-to-use-ptcg-companion/')} className="text-sm text-accent font-medium mb-6">{t(lang, 'navGuides')} →</a>
+
+            <h3 className={sectionTitle}>{t(lang, 'onboardLangTitle')}</h3>
+            <div className="grid grid-cols-3 gap-1.5 mb-5">
+              {langs.map((l) => (
+                <a key={l} href={localePath(l)} hrefLang={l} className={`press h-10 rounded-xl text-xs font-medium flex items-center justify-center ${lang === l ? 'bg-accent text-accent-fg' : 'bg-surface-2 text-fg hover:bg-surface-3'}`}>{langLabels[l]}</a>
+              ))}
             </div>
 
-            <div className="mb-4">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2">{t(lang, 'onboardLangTitle')}</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {langs.map((l) => (
-                  <a key={l} href={localePath(l)} hrefLang={l} className={`px-2 py-2 border rounded-lg text-[11px] sm:text-xs text-center font-bold transition-all ${lang === l ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-neutral-700 bg-neutral-800 hover:bg-neutral-700'}`}>{langLabels[l]}</a>
-                ))}
+            <details className="group rounded-2xl bg-surface-2 mb-2">
+              <summary className="px-4 h-12 flex justify-between items-center text-sm font-medium cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <span>{t(lang, 'onboardPrivacy')}</span>
+                <span className="text-faint transition-transform group-open:rotate-90">›</span>
+              </summary>
+              <div className="px-4 pb-4 text-xs text-muted leading-relaxed">
+                {t(lang, 'onboardPrivacyDesc')}{' '}
+                <a href={localePath(lang, 'privacy-policy/')} className="text-accent">{t(lang, 'privacyPolicy')} →</a>
               </div>
-            </div>
+            </details>
+            <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className="press px-4 h-12 rounded-2xl bg-pink-500/12 text-sm font-medium text-pink-600 dark:text-pink-300 flex items-center justify-between mb-5">
+              <span>♥ {t(lang, 'navSupport')}</span><span aria-hidden="true">›</span>
+            </a>
 
-            <div className="mb-5 flex flex-col gap-2">
-              <details className="group border border-neutral-800 rounded-lg overflow-hidden">
-                <summary className="w-full px-4 py-3 bg-neutral-800/30 flex justify-between items-center text-sm font-bold cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                  <span>{t(lang, 'onboardPrivacy')}</span>
-                  <span className="text-neutral-500 group-open:hidden">+</span>
-                  <span className="text-neutral-500 hidden group-open:block">−</span>
-                </summary>
-                <div className="p-4 text-xs text-neutral-400 bg-neutral-900/50 leading-relaxed border-t border-neutral-800">
-                  {t(lang, 'onboardPrivacyDesc')}{' '}
-                  <a href={localePath(lang, 'privacy-policy/')} className="text-blue-400 hover:underline">{t(lang, 'privacyPolicy')} →</a>
-                </div>
-              </details>
-              <a href={supportHref} target={supportUrl ? '_blank' : undefined} rel="noopener" className="px-4 py-3 rounded-lg border border-pink-900 bg-pink-950/40 text-sm font-bold text-pink-200 flex justify-between">
-                <span>♥ {t(lang, 'navSupport')}</span><span aria-hidden="true">→</span>
-              </a>
-            </div>
-
-            <button onClick={closeOnboarding} className="sticky bottom-0 mt-auto w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black tracking-widest uppercase py-4 rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)]">
+            <button onClick={closeOnboarding} className="press sticky bottom-0 mt-auto w-full h-14 rounded-2xl bg-accent text-accent-fg font-semibold text-base shadow-lg">
               {t(lang, 'onboardStartBtn')}
             </button>
           </div>

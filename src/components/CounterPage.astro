@@ -26,7 +26,7 @@ const jsonLd = {
 
 <Layout title={title} description={description} keywords={t(lang, 'metaKeywords')} lang={lang} mode="app" suffix="" jsonLd={jsonLd}>
   <h1 class="sr-only">{title}</h1>
-  <main class="w-full flex-1 min-h-0 flex flex-col bg-black">
+  <main class="w-full flex-1 min-h-0 flex flex-col bg-bg">
     <PTCGCounter lang={lang} ad={ad} supportUrl={donationLinks[0]?.url ?? ''} client:load />
   </main>
 </Layout>
