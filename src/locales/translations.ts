@@ -3,8 +3,13 @@ export type Lang = typeof langs[number];
 
 import { legalDictionary } from './legalTranslations';
 import { onboardDictionary } from './onboardTranslations';
+import { siteDictionary } from './siteTranslations';
+
+const merged = new Map<string, Record<string, string>>();
 
 export const t = (lang: string, key: string): string => {
+  const cached = merged.get(lang);
+  if (cached) return cached[key] || key;
   const dictionary: Record<string, Record<string, string>> = {
     'en': {
       metaTitle: 'PTCG Companion - Live Match Assistant',
@@ -333,7 +338,28 @@ export const t = (lang: string, key: string): string => {
     }
   };
 
-  const fallbacks = { ...dictionary['en'], ...legalDictionary['en'], ...onboardDictionary['en'] };
-  const target = { ...(dictionary[lang] || dictionary['en']), ...(legalDictionary[lang] || legalDictionary['en']), ...(onboardDictionary[lang] || onboardDictionary['en']) };
-  return target[key] || fallbacks[key] || key;
+  const fallbacks = { ...dictionary['en'], ...legalDictionary['en'], ...onboardDictionary['en'], ...siteDictionary['en'] };
+  const target = { ...(dictionary[lang] || dictionary['en']), ...(legalDictionary[lang] || legalDictionary['en']), ...(onboardDictionary[lang] || onboardDictionary['en']), ...(siteDictionary[lang] || {}) };
+  const table = { ...fallbacks };
+  for (const [k, v] of Object.entries(target)) if (v) table[k] = v;
+  merged.set(lang, table);
+  return table[key] || key;
 };
+
+// Long-form pages (guides, about, support) are written in these languages.
+// Other languages link to the closest one instead of showing a copy.
+export const contentLangs = ['en', 'zh-TW'] as const;
+export type ContentLang = typeof contentLangs[number];
+export const toContentLang = (lang: string): ContentLang =>
+  lang === 'zh-TW' || lang === 'zh-CN' ? 'zh-TW' : 'en';
+
+export const langLabels: Record<string, string> = {
+  en: 'English', 'zh-TW': '繁體中文', 'zh-CN': '简体中文', ja: '日本語', fr: 'Français', de: 'Deutsch',
+  es: 'Español', pt: 'Português', ru: 'Русский', hi: 'हिन्दी', bn: 'বাংলা', ar: 'العربية', ur: 'اردو',
+};
+
+export const rtlLangs = ['ar', 'ur'];
+
+/** Path of the page `suffix` (e.g. 'guides/') in `lang`. The English counter lives at '/'. */
+export const localePath = (lang: string, suffix = ''): string =>
+  lang === 'en' && suffix === '' ? '/' : `/${lang}/${suffix}`;

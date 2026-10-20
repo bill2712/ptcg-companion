@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PTCGCounter from './PTCGCounter';
+import { t, localePath } from '../locales/translations';
+import { siteConfig, adsenseClient, donationLinks } from '../site.config';
+
+interface Props { lang: string }
+const { lang } = Astro.props;
+const title = t(lang, 'metaTitle');
+const description = t(lang, 'metaDesc');
+const ad = siteConfig.adsense.showOnCounter && adsenseClient && siteConfig.adsense.slots.counter
+  ? { client: adsenseClient, slot: siteConfig.adsense.slots.counter }
+  : null;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: siteConfig.name,
+  url: new URL(localePath(lang), siteConfig.siteUrl).href,
+  description,
+  applicationCategory: 'GameApplication',
+  operatingSystem: 'Any (web browser)',
+  inLanguage: lang,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+
+<Layout title={title} description={description} keywords={t(lang, 'metaKeywords')} lang={lang} mode="app" suffix="" jsonLd={jsonLd}>
+  <h1 class="sr-only">{title}</h1>
+  <main class="w-full flex-1 min-h-0 flex flex-col bg-black">
+    <PTCGCounter lang={lang} ad={ad} supportUrl={donationLinks[0]?.url ?? ''} client:load />
+  </main>
+</Layout>

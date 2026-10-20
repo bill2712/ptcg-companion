@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import AdSlot from '../../../components/AdSlot.astro';
+import { contentLangs, localePath, type ContentLang } from '../../../locales/translations';
+import { pageContent } from '../../../locales/pageContent';
+import { guideLang, guideSlug } from '../../../utils/guides';
+
+export function getStaticPaths() {
+  return contentLangs.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as ContentLang;
+const c = pageContent[lang];
+const guides = (await getCollection('guides'))
+  .filter((g) => guideLang(g) === lang)
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<Layout title={`${c.guidesTitle} - PTCG Companion`} description={c.guidesIntro} lang={lang} suffix="guides/" alternates={contentLangs}>
+  <main class="max-w-4xl mx-auto px-4 py-10">
+    <h1 class="text-3xl sm:text-4xl font-black text-white mb-3">{c.guidesTitle}</h1>
+    <p class="text-neutral-400 max-w-2xl leading-relaxed mb-8">{c.guidesIntro}</p>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      {guides.map((g) => (
+        <li>
+          <a href={localePath(lang, `guides/${guideSlug(g)}/`)} class="group block h-full p-5 rounded-2xl bg-neutral-900 border border-neutral-800 hover:border-indigo-500 transition-colors">
+            <h2 class="text-lg font-bold text-white group-hover:text-indigo-300 mb-2">{g.data.title}</h2>
+            <p class="text-sm text-neutral-400 leading-relaxed">{g.data.description}</p>
+            <span class="inline-block mt-3 text-sm font-semibold text-indigo-400">{c.readGuide} →</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <AdSlot lang={lang} />
+  </main>
+</Layout>

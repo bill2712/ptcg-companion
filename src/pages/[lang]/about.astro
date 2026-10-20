@@ -1,0 +1,35 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SupportCard from '../../components/SupportCard.astro';
+import { contentLangs, localePath, type ContentLang } from '../../locales/translations';
+import { pageContent } from '../../locales/pageContent';
+import { siteConfig } from '../../site.config';
+
+export function getStaticPaths() {
+  return contentLangs.map((lang) => ({ params: { lang } }));
+}
+const lang = Astro.params.lang as ContentLang;
+const c = pageContent[lang];
+---
+
+<Layout title={`${c.aboutTitle}`} description={c.aboutBody[0]} lang={lang} suffix="about/" alternates={contentLangs}>
+  <main class="max-w-3xl mx-auto px-4 py-10">
+    <h1 class="text-3xl sm:text-4xl font-black text-white mb-6">{c.aboutTitle}</h1>
+    <div class="space-y-4 text-neutral-300 leading-relaxed">
+      {c.aboutBody.map((p) => <p>{p}</p>)}
+    </div>
+
+    <h2 class="text-xl font-bold text-white mt-10 mb-3">{c.aboutFeaturesTitle}</h2>
+    <ul class="grid sm:grid-cols-2 gap-2 text-sm text-neutral-300">
+      {c.aboutFeatures.map((f) => <li class="flex gap-2"><span class="text-emerald-400" aria-hidden="true">✓</span>{f}</li>)}
+    </ul>
+
+    <h2 class="text-xl font-bold text-white mt-10 mb-3">{c.aboutFundingTitle}</h2>
+    <p class="text-neutral-300 leading-relaxed">{c.aboutFunding} <a href={localePath(lang, 'support/')} class="text-pink-300 hover:underline">♥</a></p>
+
+    <h2 class="text-xl font-bold text-white mt-10 mb-3">{c.aboutContactTitle}</h2>
+    <p class="text-neutral-300">{c.aboutContact} <a href={`mailto:${siteConfig.contactEmail}`} class="text-indigo-300 hover:underline">{siteConfig.contactEmail}</a></p>
+
+    <SupportCard lang={lang} />
+  </main>
+</Layout>

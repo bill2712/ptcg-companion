@@ -1,97 +1,153 @@
 ---
 import '../styles/global.css';
-import { langs, t } from '../locales/translations';
+import { langs, t, localePath, toContentLang, rtlLangs, langLabels } from '../locales/translations';
+import { siteConfig, adsenseClient } from '../site.config';
 
 interface Props {
   title?: string;
   description?: string;
   keywords?: string;
   lang?: string;
+  /** 'app' = full-screen counter with no page scroll; 'page' = normal scrolling article page. */
+  mode?: 'app' | 'page';
+  /** Path after the language prefix, e.g. 'privacy-policy/'. Used for hreflang links. */
+  suffix?: string;
+  /** Languages that have a version of this page. Defaults to all languages. */
+  alternates?: readonly string[];
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown>;
 }
 
-const { 
-  title = "PTCG Companion - Live Match Assistant", 
-  description = "The ultimate esports-grade Pokémon TCG damage counter and match assistant. Track VSTAR, special conditions, and damage with zero layout shift.", 
-  keywords = "ptcg damage counter app, pokemon tcg match assistant, pokemon card battle calculator, vstar power tracker, tcg battle calculator", 
-  lang = "en" 
+const {
+  title = t('en', 'metaTitle'),
+  description = t('en', 'metaDesc'),
+  keywords,
+  lang = 'en',
+  mode = 'page',
+  suffix,
+  alternates = langs,
+  noindex = false,
+  jsonLd,
 } = Astro.props;
 
-// Construct Canonical URL mathematically cleanly
-const siteUrl = "https://ptcg-companion.pages.dev";
-const canonicalPath = lang === 'en' ? '/' : `/${lang}/`;
-const canonicalURL = new URL(canonicalPath, siteUrl).href.replace(/(?<!:)\/\/+/g, '/');
+const siteUrl = siteConfig.siteUrl;
+const abs = (path: string) => new URL(path, siteUrl).href;
+const canonicalURL = abs(suffix !== undefined ? localePath(lang, suffix) : Astro.url.pathname);
+const ogImage = abs('/og-image.png');
+const cl = toContentLang(lang);
+const dir = rtlLangs.includes(lang) ? 'rtl' : 'ltr';
+// Ads load on content pages only, so Auto ads can never cover the game controls.
+const loadAds = Boolean(adsenseClient) && (mode === 'page' || siteConfig.adsense.showOnCounter);
 ---
 
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} dir={dir}>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="keywords" content={keywords} />
-    
-    <link rel="canonical" href={canonicalURL} />
-    
-    {/* Surgical Hreflang Architecture */}
-    {langs.map(l => {
-      const lPath = l === 'en' ? '/' : `/${l}/`;
-      const lUrl = new URL(lPath, siteUrl).href.replace(/(?<!:)\/\/+/g, '/');
-      return <link rel="alternate" hreflang={l} href={lUrl} />
-    })}
-    <link rel="alternate" hreflang="x-default" href={new URL('/', siteUrl).href.replace(/(?<!:)\/\/+/g, '/')} />
+    {keywords && <meta name="keywords" content={keywords} />}
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
 
-    {/* Open Graph / Social Preview Graph Overhaul */}
+    <link rel="canonical" href={canonicalURL} />
+    {suffix !== undefined && alternates.length > 1 && (
+      <>
+        {alternates.map((l) => <link rel="alternate" hreflang={l} href={abs(localePath(l, suffix))} />)}
+        <link rel="alternate" hreflang="x-default" href={abs(localePath(alternates.includes('en') ? 'en' : alternates[0], suffix))} />
+      </>
+    )}
+
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteConfig.name} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={`${siteUrl}/og-image.jpg`} />
-    
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content={canonicalURL} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={`${siteUrl}/og-image.jpg`} />
+    <meta name="twitter:image" content={ogImage} />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
-    <!-- Google Consent Management Platform (CMP) Banner Block -->
-    <script async src="https://fundingchoicesmessages.google.com/i/pub-0000000000000000/messages.js" data-ncp="true"></script>
+    {adsenseClient && <meta name="google-adsense-account" content={adsenseClient} />}
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9R61GZ220P"></script>
-    <script>
+    <!-- Consent Mode v2: ad and analytics storage stay off in the EEA, UK and
+         Switzerland until the visitor accepts in Google's consent message
+         (shown by the AdSense tag once Privacy & messaging is set up). -->
+    <script is:inline define:vars={{ gaId: siteConfig.gaId }}>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      gtag('consent', 'default', {
+        ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied',
+        region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IS','IE','IT','LV','LI','LT','LU','MT','NL','NO','PL','PT','RO','SK','SI','ES','SE','GB','CH'],
+        wait_for_update: 500,
+      });
+      gtag('consent', 'default', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' });
       gtag('js', new Date());
-      gtag('config', 'G-9R61GZ220P');
+      gtag('config', gaId);
 
-      // Nuke legacy Coffee Timer Service Workers
+      // Remove the service worker left over from the old coffee-timer site.
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(let registration of registrations) {
-            registration.unregister();
-            console.log('Legacy ServiceWorker unregistered.');
-          }
-        });
+        navigator.serviceWorker.getRegistrations().then(function (regs) { regs.forEach(function (r) { r.unregister(); }); });
       }
     </script>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${siteConfig.gaId}`}></script>
+    {loadAds && (
+      <script is:inline async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`} crossorigin="anonymous"></script>
+    )}
   </head>
-  <body class="h-screen w-full flex flex-col justify-between bg-black text-white overflow-hidden selection:bg-gray-800">
-    <div class="flex-1 w-full flex flex-col min-h-0 overflow-hidden relative">
+  <body class={mode === 'app' ? 'app-shell bg-black text-white' : 'bg-neutral-950 text-neutral-200 min-h-screen flex flex-col'}>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-white focus:text-black focus:px-3 focus:py-2 focus:rounded">Skip to content</a>
+
+    {mode === 'page' && (
+      <header class="sticky top-0 z-50 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur">
+        <nav class="max-w-4xl mx-auto px-4 h-14 flex items-center gap-4 text-sm" aria-label="Main">
+          <a href={localePath(lang)} class="flex items-center gap-2 font-black text-white shrink-0">
+            <img src="/favicon.svg" alt="" width="28" height="28" />
+            <span class="hidden sm:inline">PTCG Companion</span>
+          </a>
+          <div class="flex items-center gap-1 sm:gap-3 ml-auto overflow-x-auto hide-scrollbar">
+            <a href={localePath(cl, 'guides/')} class="px-2 py-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800">{t(lang, 'navGuides')}</a>
+            <a href={localePath(cl, 'about/')} class="px-2 py-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800">{t(lang, 'navAbout')}</a>
+            <a href={localePath(cl, 'support/')} class="px-2 py-1 rounded-lg text-pink-300 hover:text-pink-200 hover:bg-pink-950/40 whitespace-nowrap">♥ {t(lang, 'navSupport')}</a>
+            <a href={localePath(lang)} class="ml-1 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold hover:bg-indigo-500 whitespace-nowrap">{t(lang, 'navCounter')}</a>
+          </div>
+        </nav>
+      </header>
+    )}
+
+    <div id="main" class={mode === 'app' ? 'flex-1 w-full flex flex-col min-h-0 overflow-hidden relative' : 'flex-1 w-full'}>
       <slot />
     </div>
 
-    <!-- The Spider-Web Global Footer (Crawler Highway) -->
-    <footer class="bg-neutral-950 text-neutral-600 text-[11px] py-2 border-t border-neutral-900 text-center w-full px-4 shrink-0 z-50">
-      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-2">
-        <a href={`/${lang}/privacy-policy`} class="hover:text-neutral-400 transition-colors">{t(lang, 'privacyPolicy')}</a>
-        <a href={`/${lang}/terms-of-service`} class="hover:text-neutral-400 transition-colors">{t(lang, 'termsOfService')}</a>
-        <a href={`/${lang}/contact`} class="hover:text-neutral-400 transition-colors">{t(lang, 'contactSupport')}</a>
-      </div>
-      <div class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[9px] text-neutral-700 max-w-2xl mx-auto uppercase">
-        {langs.map(l => (
-          <a href={l === 'en' ? '/' : `/${l}/`} class="hover:text-neutral-500 transition-colors">{l === 'zh-TW' ? '繁中' : l === 'zh-CN' ? '简中' : l}</a>
-        ))}
+    <footer class={mode === 'app'
+      ? 'bg-neutral-950 text-neutral-500 text-[11px] py-1.5 border-t border-neutral-900 text-center w-full px-4 shrink-0'
+      : 'bg-neutral-950 text-neutral-500 text-xs py-8 border-t border-neutral-800 w-full px-4 mt-12'}>
+      <div class="max-w-4xl mx-auto flex flex-col items-center gap-2">
+        <nav class="flex flex-wrap justify-center gap-x-5 gap-y-1" aria-label="Footer">
+          <a href={localePath(cl, 'guides/')} class="hover:text-neutral-300">{t(lang, 'navGuides')}</a>
+          <a href={localePath(cl, 'about/')} class="hover:text-neutral-300">{t(lang, 'navAbout')}</a>
+          <a href={localePath(cl, 'support/')} class="hover:text-pink-300">♥ {t(lang, 'navSupport')}</a>
+          <a href={localePath(lang, 'privacy-policy/')} class="hover:text-neutral-300">{t(lang, 'privacyPolicy')}</a>
+          <a href={localePath(lang, 'terms-of-service/')} class="hover:text-neutral-300">{t(lang, 'termsOfService')}</a>
+          <a href={localePath(lang, 'contact/')} class="hover:text-neutral-300">{t(lang, 'contactSupport')}</a>
+        </nav>
+        {mode === 'page' && (
+          <>
+            <nav class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-neutral-600" aria-label="Language">
+              {langs.map((l) => <a href={localePath(l)} hreflang={l} class="hover:text-neutral-400">{langLabels[l]}</a>)}
+            </nav>
+            <p class="text-[11px] text-neutral-600 text-center max-w-2xl leading-relaxed">{t(lang, 'disclaimer')}</p>
+            <p class="text-[11px] text-neutral-700">© {new Date().getFullYear()} PTCG Companion</p>
+          </>
+        )}
       </div>
     </footer>
   </body>

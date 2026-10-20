@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { langs, t } from '../../locales/translations';
+import { siteConfig } from '../../site.config';
 
 export function getStaticPaths() {
   return langs.map(lang => ({ params: { lang } }));
@@ -10,9 +11,9 @@ const { lang } = Astro.params;
 const title = `${t(lang as string, 'termsTitle')} - PTCG Companion`;
 ---
 
-<Layout title={title} lang={lang}>
-  <div class="min-h-screen bg-black text-neutral-300 py-12 px-6 pb-24">
-    <div class="max-w-3xl mx-auto bg-neutral-900 border border-neutral-800 p-8 rounded-2xl shadow-2xl">
+<Layout title={title} lang={lang} suffix="terms-of-service/">
+  <main class="text-neutral-300 py-10 px-4">
+    <div class="max-w-3xl mx-auto bg-neutral-900 border border-neutral-800 p-6 sm:p-8 rounded-2xl shadow-2xl">
       <h1 class="text-3xl font-black text-white mb-6">{t(lang as string, 'termsTitle')}</h1>
       
       <div class="space-y-6 text-sm leading-relaxed">
@@ -32,5 +33,5 @@ const title = `${t(lang as string, 'termsTitle')} - PTCG Companion`;
         </section>
       </div>
     </div>
-  </div>
+  </main>
 </Layout>

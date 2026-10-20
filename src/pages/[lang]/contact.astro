@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { langs, t } from '../../locales/translations';
+import { siteConfig } from '../../site.config';
 
 export function getStaticPaths() {
   return langs.map(lang => ({ params: { lang } }));
@@ -10,16 +11,16 @@ const { lang } = Astro.params;
 const title = `${t(lang as string, 'contactTitle')} - PTCG Companion`;
 ---
 
-<Layout title={title} lang={lang}>
-  <div class="min-h-screen bg-black text-neutral-300 py-12 px-6 pb-24">
-    <div class="max-w-3xl mx-auto bg-neutral-900 border border-neutral-800 p-8 rounded-2xl shadow-2xl">
+<Layout title={title} lang={lang} suffix="contact/">
+  <main class="text-neutral-300 py-10 px-4">
+    <div class="max-w-3xl mx-auto bg-neutral-900 border border-neutral-800 p-6 sm:p-8 rounded-2xl shadow-2xl">
       <h1 class="text-3xl font-black text-white mb-6">{t(lang as string, 'contactTitle')}</h1>
       
       <div class="space-y-6 text-sm leading-relaxed">
         <section>
           <h2 class="text-xl font-bold text-indigo-400 mb-2">{t(lang as string, 'contactSupportChannels')}</h2>
           <p>{t(lang as string, 'contactSupportDesc')}</p>
-          <p class="mt-2 text-lg font-mono"><a href="mailto:beyond01hk@gmail.com" class="text-blue-400 hover:underline">beyond01hk@gmail.com</a></p>
+          <p class="mt-2 text-lg font-mono"><a href={`mailto:${siteConfig.contactEmail}`} class="text-blue-400 hover:underline">{siteConfig.contactEmail}</a></p>
         </section>
 
         <section>
@@ -29,5 +30,5 @@ const title = `${t(lang as string, 'contactTitle')} - PTCG Companion`;
         </section>
       </div>
     </div>
-  </div>
+  </main>
 </Layout>
