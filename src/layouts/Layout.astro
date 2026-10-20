@@ -93,9 +93,19 @@ const loadAds = Boolean(adsenseClient) && (mode === 'page' || siteConfig.adsense
       gtag('js', new Date());
       gtag('config', gaId);
 
-      // Remove the service worker left over from the old coffee-timer site.
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (regs) { regs.forEach(function (r) { r.unregister(); }); });
+      // Offline support. /sw.js also replaces the old coffee-timer worker at the same URL.
+      if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').then(function () {
+            return navigator.serviceWorker.ready;
+          }).then(function (reg) {
+            // Cache what this page already loaded, so it works offline from the first visit.
+            var urls = performance.getEntriesByType('resource').map(function (e) { return e.name; })
+              .filter(function (u) { return u.indexOf(location.origin) === 0; });
+            urls.push(location.href);
+            if (reg.active) reg.active.postMessage({ type: 'cache', urls: urls });
+          }).catch(function () {});
+        });
       }
     </script>
     <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${siteConfig.gaId}`}></script>

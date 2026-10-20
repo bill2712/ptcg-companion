@@ -42,4 +42,4 @@ Poison, Burn and the self-damage from Confusion are also placed as damage counte
 
 ## Recording the result
 
-On PTCG Companion, add the final number with the **+100**, **+50** and **+10** buttons. For 220, tap +100 twice and +10 twice. When the total reaches or passes the Pokémon's HP it is Knocked Out: take your Prize cards and tap **Reset** before the next Pokémon comes into the Active Spot.
+On PTCG Companion, add the final number with the **+100**, **+50** and **+10** buttons. For 220, tap +100 twice and +10 twice. When the total reaches or passes the Pokémon's HP it is Knocked Out: tap **KO**, take your Prize cards, then select the Benched Pokémon that moves up and tap **⇄**. If the attack also damages the Bench, select that Bench slot (B1–B5) first and add its damage the same way; remember Weakness and Resistance do not apply there.

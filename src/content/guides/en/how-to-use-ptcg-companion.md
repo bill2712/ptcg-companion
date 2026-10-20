@@ -11,9 +11,14 @@ PTCG Companion replaces the dice, damage counters, coins and condition markers y
 
 The big red number on each side is the damage on that player's **Active Pokémon**. Use **+10**, **+50** and **+100** to add damage and **−10** to correct a mistake. Every Pokémon TCG attack deals damage in multiples of 10, so one tap is always one damage counter.
 
-When the Active Pokémon is Knocked Out or retreats, tap **Reset** inside the number box to clear it. If you tapped the wrong button, **Undo** steps that side back one action at a time (the last 20 actions are kept).
+If you tapped the wrong button, **↩** (Undo) steps that side back one action at a time (the last 20 actions are kept).
 
-> Tip: the counter tracks one Pokémon per player, the Active one. Damage on Benched Pokémon is best tracked with physical counters or a note, because those Pokémon do not change as often.
+## Active and Benched Pokémon
+
+The row of six small boxes at the top of each side is your board: **A** is the Active Pokémon and **B1–B5** are the five Bench slots. Each box shows the damage on that Pokémon. Tap a box to select it; the big number and the +/− buttons then work on that Pokémon. This is how you record attacks that also hit the Bench.
+
+- **⇄ (Switch to Active)**: select a Benched Pokémon and tap ⇄ when you retreat or play a switching card. The damage moves with each Pokémon, and the Pokémon that goes to the Bench loses its Special Conditions, as the rules say.
+- **KO**: tap it in the number box when the selected Pokémon is Knocked Out. Its damage is cleared (and, for the Active Pokémon, its Special Conditions too), and the app reminds your opponent to take Prize cards. Then select the Benched Pokémon that comes in and tap ⇄.
 
 ## Prize cards
 
@@ -40,15 +45,21 @@ Four small toggles help you remember what you have already done this turn: **Ene
 
 ## Type colour
 
-The row of small coloured dots at the top lets you tint your side with your Active Pokémon's type. It is purely visual, but it makes it easy to see at a glance which matchup is in play.
+The round multicolour button at the end of the top row opens a type picker. Choosing your Active Pokémon's type tints your side of the screen. It is purely visual, but it makes it easy to see at a glance which matchup is in play.
 
 ## Coin flip and first player
 
-**Flip coin** gives a fair random result using your device's random number generator. Use **P1 First / P2 First** to record who went first; that matters for first-turn rules described in [Turn Structure and Once-per-Turn Rules](../turn-structure/).
+**Flip coin** gives a fair random result using your device's secure random number generator. For attacks that flip several coins, tap **×N** next to it: choose how many coins to flip, or **Flip until tails**, and the app shows every result and the number of heads. Use **P1 First / P2 First** to record who went first; that matters for first-turn rules described in [Turn Structure and Once-per-Turn Rules](../turn-structure/).
 
 ## Match timer
 
 The yellow clock in the middle is the match timer. Tap it to start or pause. Open **☰ Menu** to reset it or pick 25, 30 or 50 minutes. When time runs out the clock turns red and the phone vibrates (if your device supports it).
+
+## Player names, best-of-three and the match log
+
+Open **☰ Menu** to type both players' names; they are used everywhere in the app. When a player takes their last Prize card, the winner screen offers **Next game**, which records the win and resets the board, so the series score (for example 1–0) is kept for best-of-three matches.
+
+**☰ Menu → Match log** lists everything that happened, newest first: damage on each Pokémon, Knock Outs, switches, Special Conditions, Prize cards, coin flips and turns. It is useful when both players remember a turn differently.
 
 ## Your match is saved automatically
 
@@ -56,4 +67,4 @@ Everything on screen is saved in your browser's local storage after every tap. I
 
 ## Add it to your home screen
 
-On iPhone, open the site in Safari, tap Share and choose **Add to Home Screen**. On Android, open the Chrome menu and choose **Add to Home screen** or **Install app**. It then opens full screen like a normal app, and the screen stays awake during a match.
+On iPhone, open the site in Safari, tap Share and choose **Add to Home Screen**. On Android, open the Chrome menu and choose **Add to Home screen** or **Install app**. It then opens full screen like a normal app, and the screen stays awake during a match. After your first visit the counter also works offline, which helps in venues with poor signal.
