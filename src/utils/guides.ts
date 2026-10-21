@@ -28,6 +28,9 @@ const toolMeta: Record<string, Energy> = {
   'coin-flip': 'Lightning',
   'probability-calculator': 'Water',
   'damage-calculator': 'Fire',
+  'match-tracker': 'Fighting',
+  'deck-checker': 'Grass',
+  'tournament-calculator': 'Metal',
 };
 export const toolType = (slug: string): Energy => toolMeta[slug] ?? 'Colorless';
 
