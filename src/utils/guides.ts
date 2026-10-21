@@ -20,8 +20,22 @@ const meta: Record<string, Energy> = {
   'match-timer-and-tournament-play': 'Darkness',
   'deck-building-probability': 'Metal',
   'pokemon-tcg-glossary': 'Grass',
+  'how-to-play-pokemon-tcg': 'Fire',
+  'how-to-read-a-pokemon-card': 'Water',
+  'pokemon-card-types': 'Grass',
+  'common-rules-mistakes': 'Fighting',
+  'pokemon-tcg-vs-tcg-pocket': 'Stellar',
+  'going-first-and-mulligans': 'Lightning',
+  'weakness-and-resistance': 'Fighting',
+  'retreat-and-switching': 'Colorless',
+  'how-to-build-a-pokemon-deck': 'Psychic',
+  'standard-expanded-and-rotation': 'Dragon',
 };
 export const guideType = (slug: string): Energy => meta[slug] ?? 'Colorless';
+
+// Order of the sections on the guides index.
+export const guideCategories = ['beginner', 'rules', 'strategy', 'reference'] as const;
+export type GuideCategory = (typeof guideCategories)[number];
 
 // Energy type for each tool card.
 const toolMeta: Record<string, Energy> = {

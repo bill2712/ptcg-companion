@@ -1,7 +1,8 @@
 ---
 title: "Deck-Building Odds: How Many Copies Should You Play?"
 description: "The math behind 60-card Pokémon TCG decks. Opening-hand odds for 1 to 4 copies, how often cards are prized, mulligan rates by Basic Pokémon count, and what to do with the numbers."
-order: 7
+order: 21
+category: strategy
 updated: 2026-10-20
 ---
 

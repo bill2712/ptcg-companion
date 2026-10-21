@@ -1,7 +1,8 @@
 ---
 title: "Pokémon TCG Glossary: Terms and Slang Explained"
 description: "A glossary of Pokémon TCG terms, from Active Pokémon and Bench to Prize trade, gust, mulligan, rule box, ACE SPEC and deck out. Plain explanations for new and returning players."
-order: 8
+order: 32
+category: reference
 updated: 2026-10-20
 ---
 

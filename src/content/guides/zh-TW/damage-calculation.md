@@ -1,7 +1,8 @@
 ---
 title: 傷害計算方法：弱點、抵抗力與加成次序
 description: 寶可夢卡牌官方的招式傷害計算次序，包括弱點 ×2、抵抗力 −30，以及攻擊方和防守方效果的處理。
-order: 5
+order: 13
+category: rules
 updated: 2026-10-20
 ---
 

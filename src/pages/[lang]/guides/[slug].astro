@@ -18,9 +18,15 @@ export async function getStaticPaths() {
     const lang = guideLang(entry);
     const slug = guideSlug(entry);
     const translations = all.filter((g) => guideSlug(g) === slug).map(guideLang);
+    // Same-category guides first, then the rest by order; keep the list short.
     const related = all
       .filter((g) => guideLang(g) === lang && g.id !== entry.id)
-      .sort((a, b) => a.data.order - b.data.order);
+      .sort((a, b) => {
+        const ca = a.data.category === entry.data.category ? 0 : 1;
+        const cb = b.data.category === entry.data.category ? 0 : 1;
+        return ca - cb || a.data.order - b.data.order;
+      })
+      .slice(0, 6);
     return { params: { lang, slug }, props: { entry, translations, related } };
   });
 }

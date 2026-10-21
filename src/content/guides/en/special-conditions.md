@@ -1,7 +1,8 @@
 ---
 title: Special Conditions Explained (Poisoned, Burned, Asleep, Paralyzed, Confused)
 description: What each Pokémon TCG Special Condition does, how Pokémon Checkup works, which conditions can stack, and how to remove them.
-order: 2
+order: 12
+category: rules
 updated: 2026-10-20
 ---
 

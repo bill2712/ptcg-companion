@@ -1,7 +1,8 @@
 ---
 title: Match Timers and Tournament-Style Play
 description: How time limits work in Pokémon TCG tournaments, best-of-one versus best-of-three, what happens when time is called, and good table etiquette.
-order: 6
+order: 31
+category: reference
 updated: 2026-10-20
 ---
 

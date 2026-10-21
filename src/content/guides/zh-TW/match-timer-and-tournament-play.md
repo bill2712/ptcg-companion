@@ -1,7 +1,8 @@
 ---
 title: 對戰計時與比賽形式
 description: 寶可夢卡牌比賽的時間限制、一局定勝負與三局兩勝的分別、時間到時的處理，以及對戰禮儀。
-order: 6
+order: 31
+category: reference
 updated: 2026-10-20
 ---
 
