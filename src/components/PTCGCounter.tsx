@@ -713,6 +713,15 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
   const gameNumber = series.p1 + series.p2 + 1;
   const seriesText = `${nameOf('p1')} ${series.p1} – ${series.p2} ${nameOf('p2')}`;
 
+  // Player 1 is "you" in the match tracker.
+  const trackerHref = winner
+    ? `${localePath(cl, 'tools/match-tracker/')}?${new URLSearchParams({
+        result: winner === 'p1' ? 'W' : 'L',
+        turn: game.firstPlayer === 'p1' ? 'first' : game.firstPlayer === 'p2' ? 'second' : '',
+        opp: names.p2.trim() ? `vs ${names.p2.trim()}` : '',
+      })}`
+    : '';
+
   const nextGame = () => {
     if (!winner) return;
     setSeries((s) => ({ ...s, [winner]: s[winner] + 1 }));
@@ -843,6 +852,7 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
               <div className="flex-1 text-left text-sm font-medium truncate">{nameOf('p2')}</div>
             </div>
             <button onClick={nextGame} className="press w-full mb-2 h-12 rounded-2xl bg-accent text-accent-fg font-semibold">{t(lang, 'nextGame')}</button>
+            <a href={trackerHref} className="press w-full mb-2 h-11 rounded-2xl bg-surface-2 text-fg font-medium flex items-center justify-center gap-2"><span aria-hidden="true">📊</span>{t(lang, 'saveToTracker')}</a>
             <button onClick={() => setGame((g) => ({ ...g, winnerDismissed: true }))} className="press w-full h-11 rounded-2xl bg-surface-2 text-fg font-medium">{t(lang, 'close')}</button>
             <div className="mt-5 pt-4 border-t border-line">
               <p className="text-sm text-muted mb-3">{t(lang, 'supportCta')}</p>

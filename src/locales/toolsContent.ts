@@ -2,12 +2,14 @@
 // Each tool page has: SEO title and description, the interactive tool, then
 // plain-language explanation and FAQ so the page has real content to rank with.
 
-export const toolSlugs = ['coin-flip', 'probability-calculator', 'damage-calculator'] as const;
+import { extraTools } from './toolsContentExtra';
+
+export const toolSlugs = ['match-tracker', 'deck-checker', 'coin-flip', 'probability-calculator', 'damage-calculator', 'tournament-calculator'] as const;
 export type ToolSlug = typeof toolSlugs[number];
 
 type Section = { h: string; p: string[] };
 type Faq = { q: string; a: string };
-type ToolCopy = {
+export type ToolCopy = {
   icon: string;
   tint: string;
   /** <title>, keyword first. */
@@ -37,9 +39,9 @@ type Common = {
 
 const en: Common & { tools: Record<ToolSlug, ToolCopy> } = {
   toolsTitle: 'Pokémon TCG Tools',
-  toolsSeoTitle: 'Free Pokémon TCG Tools: Coin Flip, Probability & Damage Calculator',
+  toolsSeoTitle: 'Free Pokémon TCG Tools: Match Tracker, Deck Checker, Coin Flip & Calculators',
   toolsIntro:
-    'Free tools for Pokémon TCG players: flip coins for attacks, check the odds of drawing or prizing a card, and work out damage with Weakness and Resistance. They run in your browser and work offline.',
+    'Free tools for Pokémon TCG players: track your win rate and matchups, check a deck list and test opening hands, flip coins, work out odds and damage, and plan your tournament. They run in your browser and work offline.',
   toolsEyebrow: 'Free, no sign-up',
   openTool: 'Open tool',
   faqTitle: 'Frequently asked questions',
@@ -48,6 +50,7 @@ const en: Common & { tools: Record<ToolSlug, ToolCopy> } = {
   allTools: 'All tools',
   home: 'PTCG Companion',
   tools: {
+    ...extraTools.en,
     'coin-flip': {
       icon: '🪙',
       tint: 'from-amber-500/20 to-yellow-500/5',
@@ -189,9 +192,9 @@ const en: Common & { tools: Record<ToolSlug, ToolCopy> } = {
 
 const zhTW: typeof en = {
   toolsTitle: '寶可夢卡牌工具',
-  toolsSeoTitle: '免費寶可夢卡牌工具：擲硬幣、機率計算器、傷害計算器',
+  toolsSeoTitle: '免費寶可夢卡牌工具：戰績記錄、牌組檢查、擲硬幣及計算器',
   toolsIntro:
-    '為寶可夢卡牌（PTCG）玩家而設的免費工具：為招式擲硬幣、計算抽到或被壓在獎賞卡的機率，以及按弱點和抵抗力計算傷害。全部在瀏覽器執行，也可離線使用。',
+    '為寶可夢卡牌（PTCG）玩家而設的免費工具：記錄勝率和對局表現、檢查牌表並模擬起手、擲硬幣、計算機率和傷害，以及規劃比賽。全部在瀏覽器執行，也可離線使用。',
   toolsEyebrow: '免費・無需註冊',
   openTool: '開啟工具',
   faqTitle: '常見問題',
@@ -200,6 +203,7 @@ const zhTW: typeof en = {
   allTools: '全部工具',
   home: 'PTCG Companion',
   tools: {
+    ...extraTools['zh-TW'],
     'coin-flip': {
       icon: '🪙',
       tint: 'from-amber-500/20 to-yellow-500/5',
