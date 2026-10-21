@@ -1,7 +1,8 @@
 ---
 title: 獎賞卡與勝利條件
 description: 寶可夢卡牌獎賞卡的運作方式、哪些寶可夢會被拿走 2 張或 3 張獎賞卡、三種勝利方法，以及獎賞卡交換的策略。
-order: 4
+order: 16
+category: rules
 updated: 2026-10-20
 ---
 

@@ -1,7 +1,8 @@
 ---
 title: How to Use PTCG Companion at the Table
 description: A walkthrough of every control on the PTCG Companion match counter, from damage counters and prize cards to Checkup, the coin flip and the match timer.
-order: 1
+order: 6
+category: beginner
 updated: 2026-10-20
 ---
 

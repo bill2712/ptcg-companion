@@ -93,7 +93,7 @@ const en: Common & { tools: Record<ToolSlug, ToolCopy> } = {
           a: 'Yes. Once the page has loaded it keeps working offline, which is useful in game stores with poor signal.',
         },
       ],
-      guides: ['special-conditions', 'turn-structure'],
+      guides: ['special-conditions', 'going-first-and-mulligans', 'turn-structure'],
     },
     'probability-calculator': {
       icon: '🎲',
@@ -141,7 +141,7 @@ const en: Common & { tools: Record<ToolSlug, ToolCopy> } = {
           a: 'Yes. Enter the total number of cards that do the same job, for example all your draw Supporters, as the number of copies.',
         },
       ],
-      guides: ['deck-building-probability', 'prize-cards-and-winning'],
+      guides: ['deck-building-probability', 'how-to-build-a-pokemon-deck', 'going-first-and-mulligans', 'prize-cards-and-winning'],
     },
     'damage-calculator': {
       icon: '💥',
@@ -182,7 +182,7 @@ const en: Common & { tools: Record<ToolSlug, ToolCopy> } = {
           a: 'One damage counter is 10 damage, so divide the final damage by 10.',
         },
       ],
-      guides: ['damage-calculation', 'special-conditions'],
+      guides: ['damage-calculation', 'weakness-and-resistance', 'special-conditions'],
     },
   },
 };
@@ -245,7 +245,7 @@ const zhTW: typeof en = {
           a: '可以。頁面載入一次後就能離線使用，在訊號差的卡店也不受影響。',
         },
       ],
-      guides: ['special-conditions', 'turn-structure'],
+      guides: ['special-conditions', 'going-first-and-mulligans', 'turn-structure'],
     },
     'probability-calculator': {
       icon: '🎲',
@@ -293,7 +293,7 @@ const zhTW: typeof en = {
           a: '可以。把功能相同的卡加起來當作張數輸入，例如所有抽牌用的支援者。',
         },
       ],
-      guides: ['deck-building-probability', 'prize-cards-and-winning'],
+      guides: ['deck-building-probability', 'how-to-build-a-pokemon-deck', 'going-first-and-mulligans', 'prize-cards-and-winning'],
     },
     'damage-calculator': {
       icon: '💥',
@@ -334,7 +334,7 @@ const zhTW: typeof en = {
           a: '一個傷害指示物代表 10 傷害，把最終傷害除以 10 即可。',
         },
       ],
-      guides: ['damage-calculation', 'special-conditions'],
+      guides: ['damage-calculation', 'weakness-and-resistance', 'special-conditions'],
     },
   },
 };

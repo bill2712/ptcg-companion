@@ -1,7 +1,8 @@
 ---
 title: Turn Structure and Once-per-Turn Rules
 description: The order of a Pokémon TCG turn, what you can do any number of times, what is limited to once per turn, and special first-turn rules.
-order: 3
+order: 10
+category: rules
 updated: 2026-10-20
 ---
 

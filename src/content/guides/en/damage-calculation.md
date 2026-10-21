@@ -1,7 +1,8 @@
 ---
 title: How Damage Is Calculated (Weakness, Resistance and Modifiers)
 description: The official order for calculating attack damage in the Pokémon TCG, including Weakness ×2, Resistance −30, and effects on the attacking and Defending Pokémon.
-order: 5
+order: 13
+category: rules
 updated: 2026-10-20
 ---
 

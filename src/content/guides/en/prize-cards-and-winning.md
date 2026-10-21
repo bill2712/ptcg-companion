@@ -1,7 +1,8 @@
 ---
 title: Prize Cards and How to Win a Pokémon TCG Game
 description: How Prize cards work, which Pokémon give up two or three Prize cards, the three ways to win, and how to plan your Prize trade.
-order: 4
+order: 16
+category: rules
 updated: 2026-10-20
 ---
 

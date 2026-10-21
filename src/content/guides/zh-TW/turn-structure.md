@@ -1,7 +1,8 @@
 ---
 title: 回合流程與每回合限制
 description: 寶可夢卡牌一個回合的流程、哪些行動可以無限次、哪些每回合只限一次，以及先攻第一回合的特別規則。
-order: 3
+order: 10
+category: rules
 updated: 2026-10-20
 ---
 

@@ -9,6 +9,8 @@ const guides = defineCollection({
     title: z.string(),
     description: z.string(),
     order: z.number(),
+    // Groups guides on the guides index; see guideCategories in utils/guides.ts.
+    category: z.enum(['beginner', 'rules', 'strategy', 'reference']),
     updated: z.coerce.date(),
   }),
 });

@@ -1,7 +1,8 @@
 ---
 title: PTCG Companion 使用教學：對戰時怎麼用
 description: 逐一介紹 PTCG Companion 對戰計分器的每個功能，包括傷害指示物、獎賞卡、寶可夢檢查、擲硬幣及對戰計時。
-order: 1
+order: 6
+category: beginner
 updated: 2026-10-20
 ---
 

@@ -1,7 +1,8 @@
 ---
 title: "寶可夢卡牌術語表：常見用語與玩家術語解釋"
 description: "寶可夢卡牌（PTCG）術語大全，從戰鬥寶可夢、備戰區、獎賞卡，到重抽、規則方框、ACE SPEC、獎賞卡交換等玩家常用語，一次看懂。"
-order: 8
+order: 32
+category: reference
 updated: 2026-10-20
 ---
 

@@ -10,6 +10,12 @@ export const pageContent = {
     updated: 'Last updated',
     moreGuides: 'More guides',
     allGuides: 'All guides',
+    categories: {
+      beginner: { title: 'Getting started', intro: 'New to the Pokémon TCG? Start here: how a game works, how to read a card and the mistakes everyone makes at first.' },
+      rules: { title: 'Rules explained', intro: 'Turn order, Special Conditions, damage and Prize cards, explained step by step with examples.' },
+      strategy: { title: 'Deck building and strategy', intro: 'Build a first deck that works and use the maths behind consistent draws.' },
+      reference: { title: 'Formats and reference', intro: 'Formats and rotation, tournament timing and a glossary of player terms.' },
+    },
     aboutTitle: 'About PTCG Companion',
     aboutBody: [
       'PTCG Companion is a free web app that replaces dice, damage counters, coins and condition markers at the Pokémon Trading Card Game table. Put one phone between you and your opponent: each side shows its own damage, Special Conditions and Prize cards, and the top half rotates so your opponent can read it.',
@@ -66,6 +72,12 @@ export const pageContent = {
     updated: '最後更新',
     moreGuides: '更多攻略',
     allGuides: '全部攻略',
+    categories: {
+      beginner: { title: '新手入門', intro: '剛接觸寶可夢卡牌？從這裡開始：一場對戰如何進行、如何看懂一張卡，以及新手最常犯的錯誤。' },
+      rules: { title: '規則詳解', intro: '回合流程、特殊狀態、傷害計算和獎賞卡，配合例子逐步解釋。' },
+      strategy: { title: '組牌與策略', intro: '組出第一副可以順利運作的牌組，並了解穩定抽牌背後的機率。' },
+      reference: { title: '賽制與參考資料', intro: '賽制與輪替、比賽計時，以及玩家常用術語表。' },
+    },
     aboutTitle: '關於 PTCG Companion',
     aboutBody: [
       'PTCG Companion 是一個免費網頁應用程式，用來取代寶可夢集換式卡牌對戰時使用的骰子、傷害指示物、硬幣和特殊狀態標記。只要把一部手機放在你和對手中間：每邊各自顯示傷害、特殊狀態和獎賞卡，上半部會旋轉，方便對手閱讀。',
