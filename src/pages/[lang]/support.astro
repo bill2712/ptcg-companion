@@ -3,6 +3,9 @@ import Layout from '../../layouts/Layout.astro';
 import { contentLangs, type ContentLang } from '../../locales/translations';
 import { pageContent } from '../../locales/pageContent';
 import { siteConfig, donationLinks } from '../../site.config';
+import EnergyIcon from '../../components/EnergyIcon.astro';
+import HeroCards from '../../components/HeroCards.astro';
+import type { Energy } from '../../utils/energy';
 
 export function getStaticPaths() {
   return contentLangs.map((lang) => ({ params: { lang } }));
@@ -14,15 +17,15 @@ const styles: Record<string, string> = {
   bmc: 'bg-[#FFDD00] text-neutral-950',
   paypal: 'bg-[#0070BA] text-white',
 };
-const whatIcons = ['🌐', '✨', '📖', '🚫'];
+const whatIcons: Energy[] = ['Water', 'Lightning', 'Grass', 'Psychic'];
 ---
 
 <Layout title={`${c.supportTitle}`} description={c.supportIntro} lang={lang} suffix="support/" alternates={contentLangs}>
   <main class="max-w-3xl mx-auto px-4 pt-14 sm:pt-20">
-    <section class="relative overflow-hidden rounded-[32px] bg-surface border border-line px-6 py-12 sm:px-12 sm:py-16 text-center">
-      <div class="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-transparent to-violet-500/20 pointer-events-none" aria-hidden="true"></div>
-      <div class="relative">
-        <span class="inline-flex w-16 h-16 rounded-3xl bg-pink-500/15 text-pink-500 items-center justify-center text-3xl mb-6" aria-hidden="true">♥</span>
+    <section class="relative overflow-hidden rounded-[32px] bg-surface border border-line px-6 py-10 sm:px-12 sm:py-16 text-center">
+      <div class="absolute inset-0 hero-glow pointer-events-none" aria-hidden="true"></div>
+      <div class="ball-pattern relative">
+        <HeroCards types={['Psychic', 'Fire', 'Lightning']} class="mb-6 scale-90" />
         <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-fg mb-5">{c.supportTitle}</h1>
         <p class="text-lg text-muted leading-relaxed max-w-xl mx-auto mb-8">{c.supportIntro}</p>
         {donationLinks.length > 0 ? (
@@ -44,7 +47,7 @@ const whatIcons = ['🌐', '✨', '📖', '🚫'];
       <ul class="grid sm:grid-cols-2 gap-3">
         {c.supportWhat.map((w, i) => (
           <li class="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-line">
-            <span class="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center shrink-0" aria-hidden="true">{whatIcons[i]}</span>
+            <EnergyIcon type={whatIcons[i]} size={40} />
             <span class="text-fg">{w}</span>
           </li>
         ))}

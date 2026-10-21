@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '../../../layouts/Layout.astro';
 import AdSlot from '../../../components/AdSlot.astro';
+import EnergyIcon from '../../../components/EnergyIcon.astro';
 import SupportCard from '../../../components/SupportCard.astro';
 import CoinFlip from '../../../components/tools/CoinFlip';
 import ProbabilityCalc from '../../../components/tools/ProbabilityCalc';
@@ -10,7 +11,7 @@ import { contentLangs, localePath, t, type ContentLang } from '../../../locales/
 import { toolsContent, toolSlugs, type ToolSlug } from '../../../locales/toolsContent';
 import { siteConfig } from '../../../site.config';
 import { absUrl, breadcrumbLd } from '../../../utils/seo';
-import { guideLang, guideSlug, guideMeta } from '../../../utils/guides';
+import { guideLang, guideSlug, guideType, toolType } from '../../../utils/guides';
 
 export function getStaticPaths() {
   return contentLangs.flatMap((lang) => toolSlugs.map((tool) => ({ params: { lang, tool } })));
@@ -60,9 +61,8 @@ const jsonLd = [
     </nav>
 
     <header class="mb-8">
-      <h1 class="text-3xl sm:text-[42px] font-bold tracking-tight text-fg leading-[1.15] mb-4">
-        <span aria-hidden="true" class="mr-2">{tc.icon}</span>{tc.title}
-      </h1>
+      <EnergyIcon type={toolType(tool)} size={56} class="mb-5 rounded-full shadow-lg" />
+      <h1 class="text-3xl sm:text-[42px] font-bold text-fg leading-[1.15] mb-4">{tc.title}</h1>
       <p class="text-lg text-muted leading-relaxed">{tc.intro}</p>
     </header>
 
@@ -111,7 +111,7 @@ const jsonLd = [
           {guides.map((g) => (
             <li>
               <a href={localePath(lang, `guides/${guideSlug(g)}/`)} class="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-line hover:border-line-strong transition-colors h-full">
-                <span class="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-xl shrink-0" aria-hidden="true">{guideMeta(guideSlug(g)).icon}</span>
+                <EnergyIcon type={guideType(guideSlug(g))} size={40} />
                 <span class="text-sm font-medium text-fg leading-snug">{g.data.title}</span>
               </a>
             </li>
@@ -126,7 +126,7 @@ const jsonLd = [
         {toolSlugs.filter((s) => s !== tool).map((s) => (
           <li>
             <a href={localePath(lang, `tools/${s}/`)} class="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-line hover:border-line-strong transition-colors h-full">
-              <span class="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-xl shrink-0" aria-hidden="true">{c.tools[s].icon}</span>
+              <EnergyIcon type={toolType(s)} size={40} />
               <span>
                 <span class="block text-sm font-medium text-fg leading-snug">{c.tools[s].title}</span>
                 <span class="block text-xs text-muted mt-0.5">{c.tools[s].card}</span>

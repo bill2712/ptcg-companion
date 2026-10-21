@@ -2,13 +2,15 @@
 import { getCollection, render } from 'astro:content';
 import Layout from '../../../layouts/Layout.astro';
 import AdSlot from '../../../components/AdSlot.astro';
+import EnergyIcon from '../../../components/EnergyIcon.astro';
+import { energyColor } from '../../../utils/energy';
 import SupportCard from '../../../components/SupportCard.astro';
 import { localePath, t } from '../../../locales/translations';
 import { pageContent } from '../../../locales/pageContent';
 import { siteConfig } from '../../../site.config';
 import { absUrl, breadcrumbLd } from '../../../utils/seo';
 import { toolsContent, toolSlugs } from '../../../locales/toolsContent';
-import { guideLang, guideSlug, guideMeta, readingMinutes } from '../../../utils/guides';
+import { guideLang, guideSlug, guideType, toolType, readingMinutes } from '../../../utils/guides';
 
 export async function getStaticPaths() {
   const all = await getCollection('guides');
@@ -26,7 +28,7 @@ export async function getStaticPaths() {
 const { entry, translations, related } = Astro.props;
 const { lang, slug } = Astro.params as { lang: 'en' | 'zh-TW'; slug: string };
 const c = pageContent[lang];
-const m = guideMeta(slug);
+const m = guideType(slug);
 const { Content } = await render(entry);
 const url = new URL(localePath(lang, `guides/${slug}/`), siteConfig.siteUrl).href;
 const jsonLd = [
@@ -63,7 +65,7 @@ const dateStr = entry.data.updated.toLocaleDateString(lang, { year: 'numeric', m
     </nav>
     <article>
       <header class="mb-10">
-        <span class="w-14 h-14 rounded-2xl bg-surface border border-line flex items-center justify-center text-3xl mb-6" aria-hidden="true">{m.icon}</span>
+        <span class="inline-flex mb-6 rounded-full shadow-lg" style={`box-shadow:0 10px 24px -10px ${energyColor[m]}`}><EnergyIcon type={m} size={56} /></span>
         <h1 class="text-3xl sm:text-[42px] font-bold tracking-tight text-fg leading-[1.15] mb-4">{entry.data.title}</h1>
         <p class="text-lg text-muted leading-relaxed mb-5">{entry.data.description}</p>
         <p class="text-sm text-faint">{c.updated} <time datetime={entry.data.updated.toISOString()}>{dateStr}</time> · {readingMinutes(entry.body)} {c.minRead}</p>
@@ -74,7 +76,7 @@ const dateStr = entry.data.updated.toLocaleDateString(lang, { year: 'numeric', m
     </article>
 
     <div class="my-12 p-6 rounded-3xl bg-surface border border-line flex flex-col sm:flex-row sm:items-center gap-4">
-      <img src="/favicon.svg" alt="" width="48" height="48" class="rounded-xl shrink-0" />
+      <img src="/favicon.svg" alt="" width="48" height="48" class="rounded-xl shrink-0 shadow-md" />
       <p class="text-fg flex-1 leading-relaxed">{t(lang, 'metaDesc')}</p>
       <a href={localePath(lang)} class="shrink-0 inline-flex justify-center items-center h-11 px-5 rounded-full bg-accent text-accent-fg font-semibold hover:opacity-90 transition-opacity">{t(lang, 'openCounter')}</a>
     </div>
@@ -88,7 +90,7 @@ const dateStr = entry.data.updated.toLocaleDateString(lang, { year: 'numeric', m
           {relatedTools.map((s) => (
             <li>
               <a href={localePath(lang, `tools/${s}/`)} class="flex items-center gap-3 p-4 rounded-2xl bg-accent-soft border border-accent/20 hover:border-accent/40 transition-colors h-full">
-                <span class="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-xl shrink-0" aria-hidden="true">{tools.tools[s].icon}</span>
+                <EnergyIcon type={toolType(s)} size={40} />
                 <span>
                   <span class="block text-sm font-semibold text-fg leading-snug">{tools.tools[s].title}</span>
                   <span class="block text-xs text-muted mt-0.5">{tools.tools[s].card}</span>
@@ -108,7 +110,7 @@ const dateStr = entry.data.updated.toLocaleDateString(lang, { year: 'numeric', m
           return (
             <li>
               <a href={localePath(lang, `guides/${rs}/`)} class="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-line hover:border-line-strong transition-colors h-full">
-                <span class="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-xl shrink-0" aria-hidden="true">{guideMeta(rs).icon}</span>
+                <EnergyIcon type={guideType(rs)} size={40} />
                 <span class="text-sm font-medium text-fg leading-snug">{g.data.title}</span>
               </a>
             </li>

@@ -10,12 +10,12 @@ const href = primary ? primary.url : localePath(toContentLang(lang), 'support/')
 ---
 
 <aside class="mt-14 relative overflow-hidden p-8 rounded-3xl bg-surface border border-line text-center">
-  <div class="absolute inset-0 bg-gradient-to-br from-pink-500/15 via-transparent to-violet-500/15 pointer-events-none" aria-hidden="true"></div>
-  <div class="relative">
-    <span class="inline-flex w-12 h-12 rounded-2xl bg-pink-500/15 text-pink-500 items-center justify-center text-xl mb-4" aria-hidden="true">♥</span>
+  <div class="absolute inset-0 hero-glow pointer-events-none" aria-hidden="true"></div>
+  <div class="ball-pattern relative">
+    <span class="inline-flex w-12 h-12 rounded-2xl bg-accent text-white shadow-[0_8px_20px_-8px_var(--accent)] items-center justify-center text-xl mb-4" aria-hidden="true">♥</span>
     <p class="text-xl font-semibold tracking-tight text-fg mb-2">{t(lang, 'supportCta')}</p>
     <p class="text-muted mb-6 max-w-md mx-auto leading-relaxed">{t(lang, 'supportCtaDesc')}</p>
-    <a href={href} target={primary ? '_blank' : undefined} rel="noopener" class="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-fg text-bg font-semibold hover:opacity-90 transition-opacity">
+    <a href={href} target={primary ? '_blank' : undefined} rel="noopener" class="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-sun text-neutral-900 font-semibold shadow-[0_8px_20px_-10px_var(--sun)] hover:opacity-90 transition-opacity">
       {t(lang, 'supportBtn')}{primary && <span class="opacity-60">· {primary.label}</span>}
     </a>
   </div>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/fredoka";
 @plugin "@tailwindcss/typography";
 
 /* `dark:` follows the resolved theme on <html data-theme>, set before paint in Layout. */
@@ -7,6 +8,7 @@
 
 /* Design tokens. Components use bg-bg, bg-surface, text-fg, border-line, etc. */
 @theme inline {
+  --font-display: "Fredoka Variable", "Inter Variable", ui-rounded, system-ui, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Hiragino Sans", "Noto Sans JP", sans-serif;
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -20,38 +22,46 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-fg: var(--accent-fg);
+  --color-sun: var(--sun);
+  --color-sky: var(--sky);
 }
 
 :root,
 :root[data-theme=dark] {
-  --bg: #09090b;
-  --surface: #131316;
-  --surface-2: #1c1c21;
-  --surface-3: #26262c;
-  --line: rgb(255 255 255 / 0.07);
-  --line-strong: rgb(255 255 255 / 0.14);
-  --fg: #f4f4f5;
-  --muted: #a1a1aa;
-  --faint: #63636e;
-  --accent: #8b7cff;
-  --accent-soft: rgb(139 124 255 / 0.16);
+  --bg: #0c1121;
+  --surface: #141b2f;
+  --surface-2: #1d2540;
+  --surface-3: #28314f;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --fg: #f3f5fb;
+  --muted: #a4abc4;
+  --faint: #67708f;
+  --accent: #ff5a47;
+  --accent-soft: rgb(255 90 71 / 0.16);
   --accent-fg: #ffffff;
+  --sun: #ffcf3d;
+  --sky: #5b8cff;
+  --pattern: rgb(255 255 255 / 0.045);
   color-scheme: dark;
 }
 
 :root[data-theme=light] {
-  --bg: #f3f3f6;
+  --bg: #fbf6ee;
   --surface: #ffffff;
-  --surface-2: #f1f1f4;
-  --surface-3: #e6e6eb;
-  --line: rgb(9 9 11 / 0.08);
-  --line-strong: rgb(9 9 11 / 0.16);
-  --fg: #17171c;
-  --muted: #5f5f6b;
-  --faint: #9a9aa6;
-  --accent: #6d4aff;
-  --accent-soft: rgb(109 74 255 / 0.12);
+  --surface-2: #f5efe5;
+  --surface-3: #ebe3d5;
+  --line: rgb(40 28 10 / 0.09);
+  --line-strong: rgb(40 28 10 / 0.18);
+  --fg: #1c1d2b;
+  --muted: #5d5f72;
+  --faint: #9a98a6;
+  --accent: #e63b2e;
+  --accent-soft: rgb(230 59 46 / 0.11);
   --accent-fg: #ffffff;
+  --sun: #f5b80f;
+  --sky: #2f6fe6;
+  --pattern: rgb(60 40 10 / 0.05);
   color-scheme: light;
 }
 
@@ -61,6 +71,11 @@ html {
   -webkit-text-size-adjust: 100%;
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 .tabular {
@@ -124,3 +139,137 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Pokémon-style decoration (all original artwork) ---------- */
+
+/* Thin stripe in energy colours, used under the header. */
+.energy-stripe {
+  height: 4px;
+  background: linear-gradient(90deg, #3fae49 0 12.5%, #f0532d 12.5% 25%, #2f8ae6 25% 37.5%, #f5b80f 37.5% 50%, #9a4fd6 50% 62.5%, #c86a2b 62.5% 75%, #3b4660 75% 87.5%, #b8901c 87.5% 100%);
+}
+
+/* Repeating line-art ball motif. Colour comes from --pattern. */
+.ball-pattern {
+  position: relative;
+  isolation: isolate;
+}
+.ball-pattern::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--pattern);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='28' cy='28' r='15'/%3E%3Cpath d='M13 28h10M33 28h10'/%3E%3Ccircle cx='28' cy='28' r='4.5'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 56px 56px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23000' stroke-width='2'%3E%3Ccircle cx='28' cy='28' r='15'/%3E%3Cpath d='M13 28h10M33 28h10'/%3E%3Ccircle cx='28' cy='28' r='4.5'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 56px 56px;
+}
+
+/* Hero glow: red, yellow and blue light blobs behind page titles. */
+.hero-glow {
+  background:
+    radial-gradient(40% 60% at 12% 20%, rgb(255 90 71 / 0.22), transparent 70%),
+    radial-gradient(35% 55% at 88% 15%, rgb(255 207 61 / 0.24), transparent 70%),
+    radial-gradient(45% 60% at 70% 100%, rgb(91 140 255 / 0.2), transparent 70%);
+}
+
+/* A card in the style of a trading card: coloured frame, inner panel, art window. */
+.tcg-card {
+  --type: #f5b80f;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 7px;
+  border-radius: 22px;
+  background: linear-gradient(150deg,
+    color-mix(in srgb, var(--type) 70%, #fff) 0%,
+    var(--type) 40%,
+    color-mix(in srgb, var(--type) 75%, #000) 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 14px 30px -16px color-mix(in srgb, var(--type) 80%, transparent);
+  transition: transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms ease;
+}
+.tcg-card:hover {
+  transform: translateY(-4px) rotate(-0.6deg);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 22px 40px -18px color-mix(in srgb, var(--type) 90%, transparent);
+}
+.tcg-inner {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px 14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--type) 10%, var(--surface)), var(--surface) 45%);
+  overflow: hidden;
+}
+.tcg-art {
+  position: relative;
+  aspect-ratio: 16 / 8;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 3px solid color-mix(in srgb, var(--type) 35%, var(--surface));
+  background:
+    radial-gradient(60% 80% at 50% 45%, color-mix(in srgb, var(--type) 55%, #fff) 0%, transparent 70%),
+    linear-gradient(160deg, color-mix(in srgb, var(--type) 60%, #fff), color-mix(in srgb, var(--type) 80%, #000));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+.tcg-art::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: rgb(255 255 255 / 0.22);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.6'%3E%3Ccircle cx='22' cy='22' r='12'/%3E%3Cpath d='M10 22h8M26 22h8'/%3E%3Ccircle cx='22' cy='22' r='3.5'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 44px 44px;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.6'%3E%3Ccircle cx='22' cy='22' r='12'/%3E%3Cpath d='M10 22h8M26 22h8'/%3E%3Ccircle cx='22' cy='22' r='3.5'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 44px 44px;
+}
+.tcg-art svg {
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.25));
+  transition: transform 300ms cubic-bezier(.2,.8,.2,1);
+}
+.tcg-card:hover .tcg-art svg {
+  transform: scale(1.08) rotate(-6deg);
+}
+
+/* Holographic sheen that sweeps across on hover. */
+.holo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.35) 45%, rgb(255 230 120 / 0.25) 50%, rgb(140 200 255 / 0.25) 55%, transparent 70%);
+  background-size: 250% 100%;
+  background-position: 120% 0;
+  mix-blend-mode: soft-light;
+  transition: background-position 700ms ease;
+}
+.holo:hover::after {
+  background-position: -40% 0;
+}
+
+/* Face-down Prize card. */
+.prize-back {
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0 2.5px, transparent 3px),
+    radial-gradient(circle at 50% 50%, transparent 0 5.5px, rgb(255 255 255 / 0.85) 6px 7.2px, transparent 7.6px),
+    linear-gradient(160deg, #3c6ff0, #2346b8 60%, #1a2f80);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.35), 0 1px 2px rgb(0 0 0 / 0.2);
+}
+
+/* Damage counter style for the + buttons. */
+.dmg-token {
+  background: radial-gradient(circle at 35% 30%, #ff8a5c, #f0532d 55%, #c63a1c);
+  color: #fff;
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.15), inset 0 1px 0 rgb(255 255 255 / 0.35);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.2);
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-8px) rotate(var(--r, 0deg)); }
+}
+.floaty { animation: floaty 5s ease-in-out infinite; }
+

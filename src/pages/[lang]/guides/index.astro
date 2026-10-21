@@ -3,9 +3,11 @@ import { getCollection } from 'astro:content';
 import Layout from '../../../layouts/Layout.astro';
 import AdSlot from '../../../components/AdSlot.astro';
 import SupportCard from '../../../components/SupportCard.astro';
+import TcgCard from '../../../components/TcgCard.astro';
+import HeroCards from '../../../components/HeroCards.astro';
 import { contentLangs, localePath, t, type ContentLang } from '../../../locales/translations';
 import { pageContent } from '../../../locales/pageContent';
-import { guideLang, guideSlug, guideMeta, readingMinutes } from '../../../utils/guides';
+import { guideLang, guideSlug, guideType, readingMinutes } from '../../../utils/guides';
 
 export function getStaticPaths() {
   return contentLangs.map((lang) => ({ params: { lang } }));
@@ -19,32 +21,36 @@ const guides = (await getCollection('guides'))
 
 <Layout title={`${c.guidesTitle} - PTCG Companion`} description={c.guidesIntro} lang={lang} suffix="guides/" alternates={contentLangs}>
   <main class="max-w-5xl mx-auto px-4">
-    <section class="pt-14 pb-10 sm:pt-20 sm:pb-14 text-center">
-      <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-soft text-accent text-xs font-semibold mb-5">{c.guidesEyebrow}</p>
-      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-fg mb-4">{c.guidesTitle}</h1>
-      <p class="text-muted text-lg max-w-2xl mx-auto leading-relaxed mb-8">{c.guidesIntro}</p>
-      <a href={localePath(lang)} class="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-accent text-accent-fg font-semibold hover:opacity-90 transition-opacity">
-        {t(lang, 'openCounter')}
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-      </a>
+    <section class="relative mt-6 sm:mt-10 mb-10 sm:mb-14 rounded-[32px] border border-line bg-surface overflow-hidden">
+      <div class="absolute inset-0 hero-glow pointer-events-none" aria-hidden="true"></div>
+      <div class="ball-pattern relative grid md:grid-cols-[1.2fr_1fr] items-center gap-6 px-6 py-10 sm:px-12 sm:py-14">
+        <div class="text-center md:text-left">
+          <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-soft text-accent text-xs font-semibold mb-5">{c.guidesEyebrow}</p>
+          <h1 class="text-4xl sm:text-5xl font-bold text-fg mb-4 leading-[1.1]">{c.guidesTitle}</h1>
+          <p class="text-muted text-lg max-w-xl mx-auto md:mx-0 leading-relaxed mb-8">{c.guidesIntro}</p>
+          <a href={localePath(lang)} class="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-accent text-accent-fg font-semibold shadow-[0_10px_24px_-10px_var(--accent)] hover:-translate-y-0.5 transition-transform">
+            {t(lang, 'openCounter')}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </a>
+        </div>
+        <HeroCards types={['Water', 'Fire', 'Grass']} />
+      </div>
     </section>
 
-    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {guides.map((g) => {
         const slug = guideSlug(g);
-        const m = guideMeta(slug);
         return (
           <li>
-            <a href={localePath(lang, `guides/${slug}/`)} class={`group relative flex flex-col h-full p-6 rounded-3xl bg-surface border border-line hover:border-line-strong hover:-translate-y-0.5 transition-all overflow-hidden`}>
-              <div class={`absolute inset-0 bg-gradient-to-br ${m.tint} opacity-60 pointer-events-none`} aria-hidden="true"></div>
-              <span class="relative w-12 h-12 rounded-2xl bg-surface-2 flex items-center justify-center text-2xl mb-5" aria-hidden="true">{m.icon}</span>
-              <h2 class="relative text-lg font-semibold tracking-tight text-fg mb-2 leading-snug">{g.data.title}</h2>
-              <p class="relative text-sm text-muted leading-relaxed flex-1">{g.data.description}</p>
-              <span class="relative mt-5 flex items-center justify-between text-sm">
-                <span class="text-faint">{readingMinutes(g.body)} {c.minRead}</span>
-                <span class="font-medium text-accent group-hover:translate-x-0.5 transition-transform">{c.readGuide} →</span>
-              </span>
-            </a>
+            <TcgCard
+              href={localePath(lang, `guides/${slug}/`)}
+              type={guideType(slug)}
+              title={g.data.title}
+              desc={g.data.description}
+              label={c.guidesEyebrow}
+              meta={`${readingMinutes(g.body)} ${c.minRead}`}
+              cta={c.readGuide}
+            />
           </li>
         );
       })}
