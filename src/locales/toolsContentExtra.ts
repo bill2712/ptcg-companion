@@ -63,7 +63,7 @@ const en: Record<ExtraToolSlug, ToolCopy> = {
         a: 'Log each game separately. That gives you more data for win rate and going first versus second, and you can add the event name to group them.',
       },
     ],
-    guides: ['match-timer-and-tournament-play', 'how-to-use-ptcg-companion'],
+    guides: ['going-first-and-mulligans', 'match-timer-and-tournament-play', 'how-to-use-ptcg-companion'],
   },
   'deck-checker': {
     icon: '🃏',
@@ -122,7 +122,7 @@ const en: Record<ExtraToolSlug, ToolCopy> = {
         a: 'In your browser only. Saved deck names also appear as suggestions in the match tracker.',
       },
     ],
-    guides: ['deck-building-probability', 'pokemon-tcg-glossary'],
+    guides: ['how-to-build-a-pokemon-deck', 'deck-building-probability', 'going-first-and-mulligans'],
   },
   'tournament-calculator': {
     icon: '🏆',
@@ -175,7 +175,7 @@ const en: Record<ExtraToolSlug, ToolCopy> = {
         a: 'No. Every simulated match is 50/50, so the odds show what a record is worth, not how likely you are to get it.',
       },
     ],
-    guides: ['match-timer-and-tournament-play', 'prize-cards-and-winning'],
+    guides: ['match-timer-and-tournament-play', 'standard-expanded-and-rotation', 'prize-cards-and-winning'],
   },
 };
 
@@ -237,7 +237,7 @@ const zhTW: Record<ExtraToolSlug, ToolCopy> = {
         a: '建議每一局分開記錄，這樣勝率和先後攻的數據會更多。你也可以填上賽事名稱，方便歸類。',
       },
     ],
-    guides: ['match-timer-and-tournament-play', 'how-to-use-ptcg-companion'],
+    guides: ['going-first-and-mulligans', 'match-timer-and-tournament-play', 'how-to-use-ptcg-companion'],
   },
   'deck-checker': {
     icon: '🃏',
@@ -296,7 +296,7 @@ const zhTW: Record<ExtraToolSlug, ToolCopy> = {
         a: '只保存在你的瀏覽器。已儲存的牌組名稱也會在戰績記錄中出現，方便選擇。',
       },
     ],
-    guides: ['deck-building-probability', 'pokemon-tcg-glossary'],
+    guides: ['how-to-build-a-pokemon-deck', 'deck-building-probability', 'going-first-and-mulligans'],
   },
   'tournament-calculator': {
     icon: '🏆',
@@ -349,7 +349,7 @@ const zhTW: Record<ExtraToolSlug, ToolCopy> = {
         a: '不知道。每場模擬對戰都是勝負各半，所以機率反映的是某個戰績的價值，而不是你取得這個戰績的可能性。',
       },
     ],
-    guides: ['match-timer-and-tournament-play', 'prize-cards-and-winning'],
+    guides: ['match-timer-and-tournament-play', 'standard-expanded-and-rotation', 'prize-cards-and-winning'],
   },
 };
 
