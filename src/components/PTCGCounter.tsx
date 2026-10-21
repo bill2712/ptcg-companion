@@ -1,27 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { langs, t, langLabels, localePath, toContentLang } from '../locales/translations';
+import { energySvg, energyColor, type Energy } from '../utils/energy';
 
 type ElementType = 'None' | 'Grass' | 'Fire' | 'Water' | 'Lightning' | 'Psychic' | 'Fighting' | 'Darkness' | 'Metal' | 'Dragon' | 'Colorless' | 'Stellar';
 type PlayerId = 'p1' | 'p2';
 /** -1 = Active Pokémon, 0-4 = Bench slot. */
 type Target = number;
 
-// Soft type tint for the player panel (hex, used at low opacity).
-const typeHex: Record<ElementType, string> = {
-  None: '', Grass: '#22c55e', Fire: '#ef4444', Water: '#3b82f6', Lightning: '#eab308', Psychic: '#a855f7',
-  Fighting: '#d97706', Darkness: '#64748b', Metal: '#94a3b8', Dragon: '#ca8a04', Colorless: '#cbd5e1', Stellar: '#6366f1',
-};
+// Energy colour for the player panel frame and tint.
+const typeHex = (t: ElementType) => (t === 'None' ? '' : energyColor[t as Energy]);
 
-const typeColors: Record<ElementType, string> = {
-  None: 'bg-zinc-500', Grass: 'bg-green-600', Fire: 'bg-red-600', Water: 'bg-blue-600',
-  Lightning: 'bg-yellow-400', Psychic: 'bg-purple-600', Fighting: 'bg-amber-700', Darkness: 'bg-gray-800',
-  Metal: 'bg-gray-400', Dragon: 'bg-yellow-700', Colorless: 'bg-slate-300', Stellar: 'bg-indigo-500',
-};
-
-const typeInitials: Record<ElementType, string> = {
-  None: '×', Grass: 'G', Fire: 'F', Water: 'W', Lightning: 'L', Psychic: 'P',
-  Fighting: 'Fg', Darkness: 'D', Metal: 'M', Dragon: 'R', Colorless: 'C', Stellar: 'S',
-};
+/** Original energy badge (see utils/energy.ts); 'None' shows a rainbow disc. */
+const EnergyBadge = ({ type, size }: { type: ElementType; size: number }) => type === 'None'
+  ? <span className="block rounded-full" style={{ width: size, height: size, background: 'conic-gradient(#3fae49, #f0532d, #2f8ae6, #f5b80f, #9a4fd6, #c86a2b, #3fae49)' }} />
+  : <span className="block leading-none" dangerouslySetInnerHTML={{ __html: energySvg(type as Energy, size) }} />;
 
 const types: ElementType[] = ['None', 'Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Dragon', 'Colorless', 'Stellar'];
 
@@ -193,8 +185,9 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
 
   // A Special Condition colours the panel outline so both players can see it.
   const condBorder = state.poisoned ? 'border-green-500/70' : state.burned ? 'border-orange-500/70' : state.paralyzed ? 'border-yellow-500/70'
-    : state.asleep ? 'border-blue-500/70' : state.confused ? 'border-purple-500/70' : 'border-line';
-  const tint = typeHex[state.activeType];
+    : state.asleep ? 'border-blue-500/70' : state.confused ? 'border-purple-500/70' : '';
+  // Frame colour: the Active Pokémon's type, else the player's colour (P1 red, P2 blue).
+  const tint = typeHex(state.activeType) || (player === 'p1' ? '#ff5a47' : '#3c78f0');
 
   const conditions: { key: Condition; on: string; dot: string }[] = [
     { key: 'poisoned', on: 'bg-green-500 text-white', dot: 'bg-green-500' },
@@ -216,8 +209,12 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
   return (
     <section
       aria-label={name}
-      className={`flex-1 min-h-0 overflow-y-auto hide-scrollbar flex flex-col gap-1 p-2 mx-1.5 my-1 bg-surface border-2 rounded-[22px] relative transition-colors duration-300 ${condBorder} ${isRotated ? 'rotate-180' : ''}`}
-      style={tint ? { backgroundImage: `linear-gradient(180deg, ${tint}22 0%, transparent 55%)` } : undefined}
+      className={`ball-pattern flex-1 min-h-0 overflow-y-auto hide-scrollbar flex flex-col gap-1 p-2 mx-1.5 my-1 bg-surface border-2 rounded-[22px] relative transition-colors duration-300 ${condBorder} ${isRotated ? 'rotate-180' : ''}`}
+      style={{
+        backgroundImage: `linear-gradient(180deg, ${tint}2e 0%, ${tint}0d 45%, transparent 75%)`,
+        ...(condBorder ? {} : { borderColor: `${tint}99` }),
+        boxShadow: `0 10px 30px -18px ${tint}`,
+      }}
     >
       {/* Active + Bench selector */}
       <div className="flex items-center gap-1 w-full">
@@ -253,9 +250,8 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
             onClick={() => setTypeOpen((o) => !o)}
             aria-label={`${t(lang, 'type')}: ${state.activeType}`}
             aria-expanded={typeOpen}
-            className={`press w-[30px] h-[30px] rounded-full ring-2 ring-surface-3 text-[10px] font-bold text-white flex items-center justify-center ${typeColors[state.activeType]}`}
-            style={state.activeType === 'None' ? { background: 'conic-gradient(#22c55e, #ef4444, #3b82f6, #eab308, #a855f7, #d97706, #22c55e)' } : undefined}
-          >{state.activeType === 'None' ? '' : typeInitials[state.activeType]}</button>
+            className="press w-[30px] h-[30px] rounded-full ring-2 ring-surface-3 flex items-center justify-center shadow-sm"
+          ><EnergyBadge type={state.activeType} size={30} /></button>
           {typeOpen && (
             <div className="absolute right-0 top-9 z-30 p-2 rounded-2xl bg-surface border border-line-strong shadow-2xl grid grid-cols-4 gap-1.5 w-[152px]" style={{ animation: 'sheetIn 0.15s ease-out' }} role="group" aria-label={t(lang, 'type')}>
               {types.map((el) => (
@@ -264,8 +260,9 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
                   onClick={() => { update(player, { activeType: el }); setTypeOpen(false); }}
                   aria-label={el}
                   aria-pressed={state.activeType === el}
-                  className={`press w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${typeColors[el]} ${state.activeType === el ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface' : ''}`}
-                >{typeInitials[el]}</button>
+                  title={el === 'None' ? '—' : el}
+                  className={`press w-8 h-8 rounded-full flex items-center justify-center ${state.activeType === el ? 'ring-2 ring-accent ring-offset-2 ring-offset-surface' : ''}`}
+                ><EnergyBadge type={el} size={32} /></button>
               ))}
             </div>
           )}
@@ -274,13 +271,13 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
 
       {/* Damage readout + per-turn toggles */}
       <div className="flex items-stretch justify-between w-full gap-1.5 flex-[1.4] min-h-16 max-h-36">
-        <div className="bg-surface-2 rounded-2xl w-[148px] shrink-0 flex flex-col items-center justify-center relative">
+        <div className="bg-surface-2/90 rounded-2xl w-[148px] shrink-0 flex flex-col items-center justify-center relative border border-line">
           <span className="absolute top-1.5 left-0 right-0 text-center text-[9px] font-medium text-muted truncate px-8">{name} · {targetLabel}</span>
           <span
             key={isAnim ? 'a' : 'b'}
             aria-live="polite"
             aria-label={`${targetLabel}: ${dmg}`}
-            className={`text-[clamp(34px,7vh,52px)] leading-none font-semibold tabular tracking-tight mt-3 ${isAnim ? 'bump' : ''} ${dmg > 0 ? 'text-rose-500 dark:text-rose-400' : 'text-faint'}`}
+            className={`font-display text-[clamp(34px,7vh,54px)] leading-none font-bold tabular mt-3 ${isAnim ? 'bump' : ''} ${dmg > 0 ? 'text-accent' : 'text-faint'}`}
           >{dmg}</span>
           <button
             onClick={() => undo(player)}
@@ -324,7 +321,7 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
             onClick={() => togglePrize(idx)}
             aria-pressed={!isActive}
             aria-label={`Prize ${idx + 1}`}
-            className={`press h-full min-h-6 rounded-md text-[11px] font-semibold tabular ${isActive ? 'bg-gradient-to-br from-violet-500 to-indigo-600 text-white/90 shadow-sm' : 'border border-dashed border-line-strong text-faint'}`}
+            className={`press h-full min-h-6 rounded-md text-[11px] font-semibold tabular ${isActive ? 'prize-back text-transparent' : 'border border-dashed border-line-strong text-faint'}`}
           >{idx + 1}</button>
         ))}
       </div>
@@ -335,7 +332,7 @@ const PlayerArea = ({ state, player, name, target, historyLen, isRotated, isAnim
           <button
             key={n}
             onClick={() => adjust(player, target, n)}
-            className={`press h-full rounded-2xl text-lg font-semibold tabular ${n < 0 ? 'bg-surface-2 text-muted' : 'bg-rose-500/12 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300'}`}
+            className={`press h-full rounded-2xl text-lg font-display font-semibold tabular ${n < 0 ? 'bg-surface-2 text-muted' : 'dmg-token'}`}
           >{n > 0 ? `+${n}` : `−${-n}`}</button>
         ))}
       </div>
@@ -774,7 +771,7 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
             onClick={() => { fireFeedback(); if (!timeUp) setRunning((r) => !r); }}
             aria-label={`${t(lang, 'timer')} ${formatTime(game.timeLeft)}`}
             title={t(lang, 'timerHint')}
-            className={`press px-3 h-9 rounded-full flex items-center gap-1.5 text-2xl font-semibold tabular tracking-tight ${timeUp ? 'text-rose-500 animate-pulse' : running ? 'text-fg' : 'text-muted'}`}
+            className={`press px-3 h-9 rounded-full flex items-center gap-1.5 text-2xl font-display font-semibold tabular ${timeUp ? 'text-rose-500 animate-pulse' : running ? 'text-fg' : 'text-muted'}`}
           >
             <span className={`w-2 h-2 rounded-full ${timeUp ? 'bg-rose-500' : running ? 'bg-emerald-500 animate-pulse' : 'bg-faint'}`} aria-hidden="true" />
             {timeUp ? t(lang, 'timeUp') : formatTime(game.timeLeft)}
@@ -785,7 +782,10 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
               aria-live="polite"
               className={`${pill} flex-1 border ${isFlipping ? 'border-line bg-surface text-muted animate-pulse' : coinResult === 'HEADS' ? 'border-sky-500/40 bg-sky-500/15 text-sky-600 dark:text-sky-300' : coinResult === 'TAILS' ? 'border-fuchsia-500/40 bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300' : 'border-line bg-surface text-fg'}`}
             >
-              {isFlipping ? t(lang, 'flipping') : coinResult === 'HEADS' ? t(lang, 'heads') : coinResult === 'TAILS' ? t(lang, 'tails') : t(lang, 'flipCoin')}
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <span className={`w-4 h-4 rounded-full shrink-0 bg-[radial-gradient(circle_at_35%_30%,#ffe680,#f5b80f_60%,#c98a00)] shadow-[inset_0_0_0_1.5px_rgb(255_255_255/0.5)] ${isFlipping ? 'animate-spin' : ''}`} aria-hidden="true" />
+                {isFlipping ? t(lang, 'flipping') : coinResult === 'HEADS' ? t(lang, 'heads') : coinResult === 'TAILS' ? t(lang, 'tails') : t(lang, 'flipCoin')}
+              </span>
             </button>
             <button onClick={() => { fireFeedback(); setCoinRun(null); setCoinSheet(true); }} aria-label={t(lang, 'coinMore')} className={`${pill} w-9 border border-line bg-surface text-muted`}>×N</button>
           </div>
@@ -797,7 +797,7 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
                 key={p}
                 onClick={() => { fireFeedback(); setGame((g) => ({ ...g, firstPlayer: p })); }}
                 aria-pressed={game.firstPlayer === p}
-                className={`press flex-1 h-7 rounded-full text-[10px] font-semibold ${game.firstPlayer === p ? 'bg-amber-500 text-white shadow-sm' : 'text-muted'}`}
+                className={`press flex-1 h-7 rounded-full text-[10px] font-semibold ${game.firstPlayer === p ? 'bg-sun text-neutral-900 shadow-sm' : 'text-muted'}`}
               >{t(lang, p === 'p1' ? 'p1First' : 'p2First')}</button>
             ))}
           </div>
@@ -829,7 +829,12 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
       {winner && !game.winnerDismissed && (
         <div className="fixed inset-0 z-[95] bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.3s ease-out forwards' }} role="dialog" aria-modal="true" aria-label={winnerText}>
           <div className={`w-full max-w-sm bg-surface border border-line rounded-[28px] p-6 text-center shadow-2xl ${winner === 'p2' ? 'rotate-180' : ''}`} style={sheetAnim}>
-            <div className="mx-auto mb-3 w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center text-3xl shadow-lg" aria-hidden="true">🏆</div>
+            <div className="relative mx-auto mb-3 w-40 h-20 flex items-center justify-center" aria-hidden="true">
+              {(['Fire', 'Water', 'Grass', 'Lightning'] as const).map((e, i) => (
+                <span key={e} className="floaty absolute" style={{ left: `${[2, 18, 72, 88][i]}%`, top: `${[10, 62, 58, 6][i]}%`, animationDelay: `${-i * 0.9}s` }}><EnergyBadge type={e} size={i % 2 ? 22 : 26} /></span>
+              ))}
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 flex items-center justify-center text-3xl shadow-lg rotate-3">🏆</div>
+            </div>
             <h2 className="text-2xl font-bold tracking-tight mb-1">{winnerText}</h2>
             <p className="text-muted text-sm">{fmt(t(lang, 'gameN'), { n: gameNumber })} · {t(lang, 'turn')} {game.turn}{game.timeLeft < game.duration ? ` · ${formatTime(game.duration - game.timeLeft)}` : ''}</p>
             <div className="my-5 flex items-center justify-center gap-4">

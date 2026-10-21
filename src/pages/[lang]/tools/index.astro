@@ -2,6 +2,9 @@
 import Layout from '../../../layouts/Layout.astro';
 import AdSlot from '../../../components/AdSlot.astro';
 import SupportCard from '../../../components/SupportCard.astro';
+import TcgCard from '../../../components/TcgCard.astro';
+import HeroCards from '../../../components/HeroCards.astro';
+import { toolType } from '../../../utils/guides';
 import { contentLangs, localePath, t, type ContentLang } from '../../../locales/translations';
 import { toolsContent, toolSlugs } from '../../../locales/toolsContent';
 import { absUrl, breadcrumbLd } from '../../../utils/seo';
@@ -31,33 +34,27 @@ const jsonLd = [
 
 <Layout title={`${c.toolsSeoTitle} | PTCG Companion`} description={c.toolsIntro} lang={lang} suffix="tools/" alternates={contentLangs} jsonLd={jsonLd}>
   <main class="max-w-5xl mx-auto px-4">
-    <section class="pt-14 pb-10 sm:pt-20 sm:pb-14 text-center">
-      <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-soft text-accent text-xs font-semibold mb-5">{c.toolsEyebrow}</p>
-      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-fg mb-4">{c.toolsTitle}</h1>
-      <p class="text-muted text-lg max-w-2xl mx-auto leading-relaxed">{c.toolsIntro}</p>
+    <section class="relative mt-6 sm:mt-10 mb-10 sm:mb-14 rounded-[32px] border border-line bg-surface overflow-hidden">
+      <div class="absolute inset-0 hero-glow pointer-events-none" aria-hidden="true"></div>
+      <div class="ball-pattern relative grid md:grid-cols-[1.2fr_1fr] items-center gap-6 px-6 py-10 sm:px-12 sm:py-14">
+        <div class="text-center md:text-left">
+          <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-soft text-accent text-xs font-semibold mb-5">{c.toolsEyebrow}</p>
+          <h1 class="text-4xl sm:text-5xl font-bold text-fg mb-4 leading-[1.1]">{c.toolsTitle}</h1>
+          <p class="text-muted text-lg max-w-xl mx-auto md:mx-0 leading-relaxed">{c.toolsIntro}</p>
+        </div>
+        <HeroCards types={['Lightning', 'Psychic', 'Water']} />
+      </div>
     </section>
 
-    <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <li>
-        <a href={localePath(lang)} class="group relative flex flex-col h-full p-6 rounded-3xl bg-surface border border-line hover:border-line-strong hover:-translate-y-0.5 transition-all overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-indigo-500/5 opacity-60 pointer-events-none" aria-hidden="true"></div>
-          <span class="relative w-12 h-12 rounded-2xl bg-surface-2 flex items-center justify-center text-2xl mb-5" aria-hidden="true">📱</span>
-          <h2 class="relative text-lg font-semibold tracking-tight text-fg mb-2 leading-snug">{t(lang, 'navCounter')}</h2>
-          <p class="relative text-sm text-muted leading-relaxed flex-1">{t(lang, 'metaDesc')}</p>
-          <span class="relative mt-5 text-sm font-medium text-accent group-hover:translate-x-0.5 transition-transform">{t(lang, 'openCounter')} →</span>
-        </a>
+        <TcgCard href={localePath(lang)} type="Grass" title={t(lang, 'navCounter')} desc={t(lang, 'metaDesc')} label={c.toolsEyebrow} cta={t(lang, 'openCounter')} />
       </li>
       {toolSlugs.map((s) => {
         const tc = c.tools[s];
         return (
           <li>
-            <a href={localePath(lang, `tools/${s}/`)} class="group relative flex flex-col h-full p-6 rounded-3xl bg-surface border border-line hover:border-line-strong hover:-translate-y-0.5 transition-all overflow-hidden">
-              <div class={`absolute inset-0 bg-gradient-to-br ${tc.tint} opacity-60 pointer-events-none`} aria-hidden="true"></div>
-              <span class="relative w-12 h-12 rounded-2xl bg-surface-2 flex items-center justify-center text-2xl mb-5" aria-hidden="true">{tc.icon}</span>
-              <h2 class="relative text-lg font-semibold tracking-tight text-fg mb-2 leading-snug">{tc.title}</h2>
-              <p class="relative text-sm text-muted leading-relaxed flex-1">{tc.card}</p>
-              <span class="relative mt-5 text-sm font-medium text-accent group-hover:translate-x-0.5 transition-transform">{c.openTool} →</span>
-            </a>
+            <TcgCard href={localePath(lang, `tools/${s}/`)} type={toolType(s)} title={tc.title} desc={tc.card} label={c.toolsEyebrow} cta={c.openTool} />
           </li>
         );
       })}

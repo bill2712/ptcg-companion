@@ -4,13 +4,15 @@ import SupportCard from '../../components/SupportCard.astro';
 import { contentLangs, localePath, t, type ContentLang } from '../../locales/translations';
 import { pageContent } from '../../locales/pageContent';
 import { siteConfig } from '../../site.config';
+import EnergyIcon from '../../components/EnergyIcon.astro';
+import type { Energy } from '../../utils/energy';
 
 export function getStaticPaths() {
   return contentLangs.map((lang) => ({ params: { lang } }));
 }
 const lang = Astro.params.lang as ContentLang;
 const c = pageContent[lang];
-const icons = ['🎯', '🧪', '✚', '🃏', '⚡', '⭐', '🪙', '📜', '💾', '🌏', '📶'];
+const icons: Energy[] = ['Fire', 'Psychic', 'Grass', 'Water', 'Lightning', 'Stellar', 'Dragon', 'Fighting', 'Metal', 'Colorless', 'Darkness'];
 ---
 
 <Layout title={`${c.aboutTitle}`} description={c.aboutBody[0]} lang={lang} suffix="about/" alternates={contentLangs}>
@@ -25,7 +27,7 @@ const icons = ['🎯', '🧪', '✚', '🃏', '⚡', '⭐', '🪙', '📜', '�
     <ul class="grid sm:grid-cols-2 gap-3">
       {c.aboutFeatures.map((f, i) => (
         <li class="flex items-start gap-3 p-4 rounded-2xl bg-surface border border-line">
-          <span class="w-9 h-9 rounded-xl bg-surface-2 flex items-center justify-center shrink-0" aria-hidden="true">{icons[i % icons.length]}</span>
+          <EnergyIcon type={icons[i % icons.length]} size={36} />
           <span class="text-sm text-fg leading-relaxed pt-1.5">{f}</span>
         </li>
       ))}

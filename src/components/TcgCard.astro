@@ -1,0 +1,32 @@
+---
+// A link card drawn like a trading card: energy-coloured frame, header with
+// a type badge, an "art" window and a text box. Original design.
+import { energySvg, energyColor, type Energy } from '../utils/energy';
+
+interface Props {
+  href: string;
+  type: Energy;
+  title: string;
+  desc: string;
+  label?: string;
+  meta?: string;
+  cta: string;
+}
+const { href, type, title, desc, label, meta, cta } = Astro.props;
+---
+
+<a href={href} class="group tcg-card holo" style={`--type:${energyColor[type]}`}>
+  <div class="tcg-inner">
+    <div class="flex items-center justify-between gap-2 mb-2.5">
+      <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted truncate">{label}</span>
+      <span set:html={energySvg(type, 22)} />
+    </div>
+    <div class="tcg-art mb-3.5"><span set:html={energySvg(type, 64)} /></div>
+    <h2 class="text-lg font-semibold text-fg mb-1.5 leading-snug">{title}</h2>
+    <p class="text-sm text-muted leading-relaxed flex-1">{desc}</p>
+    <span class="mt-4 pt-3 border-t border-line flex items-center justify-between text-sm">
+      <span class="text-faint">{meta}</span>
+      <span class="font-semibold group-hover:translate-x-0.5 transition-transform" style={`color:color-mix(in srgb, ${energyColor[type]} 80%, var(--fg))`}>{cta} →</span>
+    </span>
+  </div>
+</a>

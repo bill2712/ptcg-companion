@@ -1,4 +1,5 @@
 import type { CollectionEntry } from 'astro:content';
+import type { Energy } from './energy';
 
 // The glob loader lowercases ids ("zh-tw/..."), so read language and slug from the file path.
 const parts = (g: CollectionEntry<'guides'>) => {
@@ -9,18 +10,26 @@ const parts = (g: CollectionEntry<'guides'>) => {
 export const guideLang = (g: CollectionEntry<'guides'>) => parts(g).lang;
 export const guideSlug = (g: CollectionEntry<'guides'>) => parts(g).slug;
 
-// Icon and colour for each guide card.
-const meta: Record<string, { icon: string; tint: string }> = {
-  'how-to-use-ptcg-companion': { icon: '📱', tint: 'from-violet-500/20 to-indigo-500/5' },
-  'special-conditions': { icon: '🧪', tint: 'from-green-500/20 to-emerald-500/5' },
-  'turn-structure': { icon: '🔄', tint: 'from-sky-500/20 to-blue-500/5' },
-  'prize-cards-and-winning': { icon: '🏆', tint: 'from-amber-500/20 to-yellow-500/5' },
-  'damage-calculation': { icon: '💥', tint: 'from-rose-500/20 to-red-500/5' },
-  'match-timer-and-tournament-play': { icon: '⏱️', tint: 'from-fuchsia-500/20 to-pink-500/5' },
-  'deck-building-probability': { icon: '🎲', tint: 'from-sky-500/20 to-cyan-500/5' },
-  'pokemon-tcg-glossary': { icon: '📚', tint: 'from-orange-500/20 to-amber-500/5' },
+// Energy type (badge + card colour) for each guide card.
+const meta: Record<string, Energy> = {
+  'how-to-use-ptcg-companion': 'Lightning',
+  'special-conditions': 'Psychic',
+  'turn-structure': 'Water',
+  'prize-cards-and-winning': 'Dragon',
+  'damage-calculation': 'Fire',
+  'match-timer-and-tournament-play': 'Darkness',
+  'deck-building-probability': 'Metal',
+  'pokemon-tcg-glossary': 'Grass',
 };
-export const guideMeta = (slug: string) => meta[slug] ?? { icon: '📖', tint: 'from-zinc-500/20 to-zinc-500/5' };
+export const guideType = (slug: string): Energy => meta[slug] ?? 'Colorless';
+
+// Energy type for each tool card.
+const toolMeta: Record<string, Energy> = {
+  'coin-flip': 'Lightning',
+  'probability-calculator': 'Water',
+  'damage-calculator': 'Fire',
+};
+export const toolType = (slug: string): Energy => toolMeta[slug] ?? 'Colorless';
 
 /** Rough reading time in minutes (CJK counted per character). */
 export const readingMinutes = (body = '') => {

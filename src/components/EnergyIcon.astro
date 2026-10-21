@@ -1,0 +1,8 @@
+---
+import { energySvg, type Energy } from '../utils/energy';
+
+interface Props { type: Energy; size?: number; class?: string }
+const { type, size = 24, class: cls = '' } = Astro.props;
+---
+
+<span class={`inline-flex shrink-0 ${cls}`} set:html={energySvg(type, size)} />

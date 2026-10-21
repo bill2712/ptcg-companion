@@ -1,0 +1,42 @@
+---
+// Decorative hero art: a fan of three trading-card shapes with energy badges.
+// Everything is drawn here; no official artwork is used.
+import { energySvg, energyColor, type Energy } from '../utils/energy';
+
+interface Props { types?: [Energy, Energy, Energy]; class?: string }
+const { types = ['Water', 'Fire', 'Grass'], class: cls = '' } = Astro.props;
+const fan = [
+  { t: types[0], r: -14, x: -78, y: 14, z: 1, d: '0s' },
+  { t: types[2], r: 14, x: 78, y: 14, z: 1, d: '-1.6s' },
+  { t: types[1], r: 0, x: 0, y: 0, z: 2, d: '-0.8s' },
+];
+const orbs: { t: Energy; top: string; left: string; s: number; d: string }[] = [
+  { t: 'Lightning', top: '6%', left: '6%', s: 34, d: '-1s' },
+  { t: 'Psychic', top: '12%', left: '86%', s: 30, d: '-2.4s' },
+  { t: 'Metal', top: '74%', left: '2%', s: 26, d: '-3.2s' },
+  { t: 'Darkness', top: '80%', left: '90%', s: 28, d: '-0.4s' },
+];
+---
+
+<div class={`relative mx-auto w-[300px] h-[210px] ${cls}`} aria-hidden="true">
+  {orbs.map((o) => (
+    <span class="floaty absolute" style={`top:${o.top};left:${o.left};animation-delay:${o.d}`} set:html={energySvg(o.t, o.s)} />
+  ))}
+  {fan.map((c) => (
+    <div class="absolute left-1/2 top-1/2" style={`z-index:${c.z};transform:translate(calc(-50% + ${c.x}px), calc(-50% + ${c.y}px))`}>
+      <div class="floaty" style={`--r:${c.r}deg;animation-delay:${c.d}`}>
+        <div class="tcg-card holo w-[118px] h-[164px] !p-[5px]" style={`--type:${energyColor[c.t]}`}>
+          <div class="tcg-inner !p-[7px]">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="h-1.5 w-12 rounded-full bg-fg/15"></span>
+              <span set:html={energySvg(c.t, 14)} />
+            </div>
+            <div class="tcg-art !aspect-[5/4]"><span set:html={energySvg(c.t, 40)} /></div>
+            <span class="mt-2 h-1.5 w-[80%] rounded-full bg-fg/10"></span>
+            <span class="mt-1 h-1.5 w-[60%] rounded-full bg-fg/10"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
