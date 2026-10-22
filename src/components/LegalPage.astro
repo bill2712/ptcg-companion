@@ -1,0 +1,54 @@
+---
+// Shared layout for the privacy policy, terms of service and contact pages.
+// Copy lives in src/locales/legalPages.ts.
+import Layout from '../layouts/Layout.astro';
+import { siteConfig } from '../site.config';
+import { localePath } from '../locales/translations';
+import { getLegalPages, LEGAL_UPDATED, type LegalDoc } from '../locales/legalPages';
+import { richText, plainText } from '../utils/richText';
+
+interface Props {
+  lang: string;
+  /** Path after the language prefix, e.g. 'privacy-policy/'. */
+  suffix: string;
+  doc: LegalDoc;
+  /** Number the section headings and show the "last updated" date. */
+  formal?: boolean;
+}
+const { lang, suffix, doc, formal = true } = Astro.props;
+
+const links: Record<string, string> = {
+  privacy: localePath(lang, 'privacy-policy/'),
+  terms: localePath(lang, 'terms-of-service/'),
+  adsSettings: 'https://myadcenter.google.com/',
+  aboutAds: 'https://www.aboutads.info/choices/',
+  googlePartners: 'https://policies.google.com/technologies/partner-sites',
+  gaOptout: 'https://tools.google.com/dlpage/gaoptout',
+};
+const email = siteConfig.contactEmail;
+const html = (s: string) => richText(s, links, email);
+const description = plainText(doc.intro ?? doc.sections[0].p[0], email);
+const updatedLabel = getLegalPages(lang).updated;
+---
+
+<Layout title={`${doc.title} - PTCG Companion`} description={description} lang={lang} suffix={suffix}>
+  <main class="text-muted py-12 sm:py-16 px-4">
+    <div class="max-w-2xl mx-auto">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-fg mb-8">{doc.title}</h1>
+      {doc.intro && <p class="text-[15px] leading-relaxed mb-8" set:html={html(doc.intro)} />}
+
+      <div class="space-y-8 text-[15px] leading-relaxed">
+        {doc.sections.map((s, i) => (
+          <section>
+            <h2 class="text-lg font-semibold text-fg mb-2">{formal ? `${i + 1}. ${s.h}` : s.h}</h2>
+            {s.p.map((p, j) => (
+              <p class:list={[j > 0 && 'mt-3', p === '{email}' && 'text-base font-medium']} set:html={html(p)} />
+            ))}
+          </section>
+        ))}
+      </div>
+
+      {formal && <p class="mt-10 text-xs text-faint">{updatedLabel}: {LEGAL_UPDATED}</p>}
+    </div>
+  </main>
+</Layout>

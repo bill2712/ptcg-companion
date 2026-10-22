@@ -1,36 +1,13 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import { langs, t } from '../../locales/translations';
+import LegalPage from '../../components/LegalPage.astro';
+import { langs } from '../../locales/translations';
+import { getLegalPages } from '../../locales/legalPages';
 
 export function getStaticPaths() {
-  return langs.map(lang => ({ params: { lang } }));
+  return langs.map((lang) => ({ params: { lang } }));
 }
 
-const { lang } = Astro.params;
-const title = `${t(lang as string, 'termsTitle')} - PTCG Companion`;
+const lang = Astro.params.lang as string;
 ---
 
-<Layout title={title} lang={lang} suffix="terms-of-service/">
-  <main class="text-muted py-12 sm:py-16 px-4">
-    <div class="max-w-2xl mx-auto">
-      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-fg mb-8">{t(lang as string, 'termsTitle')}</h1>
-      
-      <div class="space-y-8 text-[15px] leading-relaxed">
-        <section>
-          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'termsAppUsage')}</h2>
-          <p>{t(lang as string, 'termsAppUsageDesc').split('localStorage')[0]}<code class="px-1.5 py-0.5 rounded-md bg-surface-2 text-fg text-[13px]">localStorage</code>{t(lang as string, 'termsAppUsageDesc').split('localStorage')[1]}</p>
-        </section>
-
-        <section>
-          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'termsData')}</h2>
-          <p>{t(lang as string, 'termsDataDesc')}</p>
-        </section>
-
-        <section>
-          <h2 class="text-lg font-semibold text-fg mb-2">{t(lang as string, 'termsAds')}</h2>
-          <p>{t(lang as string, 'termsAdsDesc')}</p>
-        </section>
-      </div>
-    </div>
-  </main>
-</Layout>
+<LegalPage lang={lang} suffix="terms-of-service/" doc={getLegalPages(lang).terms} />

@@ -11,6 +11,13 @@ Free Pokémon TCG match assistant: damage counters, Special Conditions, Prize ca
 | `npm run build` | Build to `./dist/` |
 | `npm run preview` | Preview the build |
 
+## Deployment
+
+The site is hosted on Cloudflare Workers (static assets). Cloudflare Workers Builds deploys `main` automatically; other branches become preview builds.
+
+- `wrangler.jsonc`: serves `dist/` and returns `dist/404.html` for unknown URLs.
+- `public/_headers`: security headers and caching rules, applied by Cloudflare.
+
 ## Ads and donations: `src/site.config.ts`
 
 Everything monetisation-related lives in one file:
@@ -31,7 +38,8 @@ Everything monetisation-related lives in one file:
 ## Content
 
 - Guides: `src/content/guides/<lang>/<slug>.md` (English and Traditional Chinese). Same file name in both folders = translation.
-- Counter UI strings: `src/locales/translations.ts`, `siteTranslations.ts`, `onboardTranslations.ts`, `legalTranslations.ts` (missing keys fall back to English).
+- Counter UI strings: `src/locales/translations.ts`, `siteTranslations.ts`, `onboardTranslations.ts` (missing keys fall back to English).
+- Privacy policy, terms and contact page: `src/locales/legalPages.ts`, all 13 languages. Change `LEGAL_UPDATED` there when you edit the copy.
 - About / Support copy: `src/locales/pageContent.ts`.
 - Tools (`/<lang>/tools/...`: coin flip, probability calculator, damage calculator): copy in `src/locales/toolsContent.ts`, components in `src/components/tools/`.
 
