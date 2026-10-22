@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { langs, t, langLabels, localePath, toContentLang } from '../locales/translations';
 import { energySvg, energyColor, type Energy } from '../utils/energy';
 
@@ -711,7 +711,6 @@ export default function PTCGCounter({ lang = 'en', ad = null, supportUrl = '' }:
   const winnerText = winner ? `${nameOf(winner)}${cjk ? '' : ' '}${t(lang, 'wins')}` : '';
   const timeUp = game.timeLeft === 0;
   const gameNumber = series.p1 + series.p2 + 1;
-  const seriesText = `${nameOf('p1')} ${series.p1} – ${series.p2} ${nameOf('p2')}`;
 
   // Player 1 is "you" in the match tracker.
   const trackerHref = winner

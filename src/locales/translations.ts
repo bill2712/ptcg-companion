@@ -117,7 +117,7 @@ export const t = (lang: string, key: string): string => {
       metaKeywords: 'compteur de dégâts pokemon, assistant match jcc pokemon, calculatrice combat carte, tracker vstar',
       damageCounters: 'Marqueurs de Dégâts',
       undo: 'Annuler ↩',
-      reset: 'Rénit',
+      reset: 'Réinit.',
       retreatUsed: 'Retraite Utilisée',
       ability: 'Talent (1/Tour)',
       poison: 'Empoisonné',

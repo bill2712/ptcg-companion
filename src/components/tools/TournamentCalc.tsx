@@ -76,13 +76,21 @@ export default function TournamentCalc({ lang }: Props) {
   const [me, setMe] = useState({ w: 0, l: 0, t: 0 });
   const [rows, setRows] = useState<ReturnType<typeof simulate> | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     try {
       const v = JSON.parse(localStorage.getItem(KEY) || 'null');
       if (v) { setPlayers(v.players ?? 32); setCustom(!!v.custom); setRounds(v.rounds ?? 5); setCut(v.cut ?? 8); setTiePct(v.tiePct ?? 5); }
     } catch {}
+    setLoaded(true);
   }, []);
+  // Save every setting, but only after the saved ones were read back, so the
+  // defaults never overwrite them.
+  useEffect(() => {
+    if (!loaded) return;
+    try { localStorage.setItem(KEY, JSON.stringify({ players, custom, rounds, cut, tiePct })); } catch {}
+  }, [loaded, players, custom, rounds, cut, tiePct]);
 
   const n = clampInt(players, 4, 1024);
   const sug = suggest(n);
@@ -91,7 +99,6 @@ export default function TournamentCalc({ lang }: Props) {
   const tie = clampInt(tiePct, 0, 40) / 100;
 
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify({ players, custom, rounds, cut, tiePct })); } catch {}
     setBusy(true);
     const id = window.setTimeout(() => {
       setRows(C > 0 ? simulate(n, R, C, tie) : null);

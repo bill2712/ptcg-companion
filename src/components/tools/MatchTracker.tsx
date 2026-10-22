@@ -138,7 +138,16 @@ export default function MatchTracker({ lang }: Props) {
       if (!Array.isArray(data)) throw new Error();
       const ok = data.filter((r: any) => r && typeof r.deck === 'string' && typeof r.opp === 'string' && ['W', 'L', 'T'].includes(r.result));
       const have = new Set(records.map((r) => r.id));
-      const fresh = ok.map((r: any) => ({ ...r, id: typeof r.id === 'string' ? r.id : newId(), date: typeof r.date === 'string' ? r.date : today(), turn: r.turn === 'first' || r.turn === 'second' ? r.turn : '' }))
+      // Keep only the known fields, as text, so a hand-edited file can't show "[object Object]".
+      const text = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 120) : undefined);
+      const fresh = ok.map((r: any): MatchRecord => ({
+        id: typeof r.id === 'string' ? r.id : newId(),
+        date: typeof r.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : today(),
+        deck: r.deck, opp: r.opp, result: r.result,
+        turn: r.turn === 'first' || r.turn === 'second' ? r.turn : '',
+        ...(text(r.event) ? { event: text(r.event) } : {}),
+        ...(text(r.note) ? { note: text(r.note) } : {}),
+      }))
         .filter((r: MatchRecord) => !have.has(r.id));
       setRecords((rs) => [...fresh, ...rs].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)));
       flash(fmt(ui.imported, { n: fresh.length }));
